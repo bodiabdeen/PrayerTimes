@@ -1,78 +1,21 @@
 {
   "project_info": {
-    "project_number": "111581192358",
-    "project_id": "iompt-f5b68",
-    "storage_bucket": "iompt-f5b68.firebasestorage.app"
+    "project_number": "466485046095",
+    "project_id": "jic-prayer-times",
+    "storage_bucket": "jic-prayer-times.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:111581192358:android:cd0aa0f07fe3be0bca5467",
+        "mobilesdk_app_id": "1:466485046095:android:787746f7cc91028e44b33a",
         "android_client_info": {
-          "package_name": "com.iaiom.pt"
+          "package_name": "com.jicprayertimes"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCGbadJ0wO79tRaINMyr_RNGG608WwNnPw"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:111581192358:android:5b0fd5292530e28dca5467",
-        "android_client_info": {
-          "package_name": "com.iomprayertimes"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCGbadJ0wO79tRaINMyr_RNGG608WwNnPw"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:111581192358:android:5a49f89afab98fb7ca5467",
-        "android_client_info": {
-          "package_name": "uk.abdeen.iomprayertimes"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCGbadJ0wO79tRaINMyr_RNGG608WwNnPw"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:111581192358:android:0418037bac4f3de5ca5467",
-        "android_client_info": {
-          "package_name": "uk.abdeen.iomprayertimes.watchface"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCGbadJ0wO79tRaINMyr_RNGG608WwNnPw"
+          "current_key": "AIzaSyBqI_K0pvqE6KzwN0yfHd8p8b9UXUCR6dc"
         }
       ],
       "services": {

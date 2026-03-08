@@ -11,7 +11,7 @@ export const FIREBASE_CONFIG = {
 
 export const ALADHAN_API = {
   BASE_URL: 'https://api.aladhan.com/v1',
-  TIMEZONE: 'Europe/Isle_of_Man',
+  TIMEZONE: 'Europe/Jersey',
 };
 
 export const CACHE_KEYS = {

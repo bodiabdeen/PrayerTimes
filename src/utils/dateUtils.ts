@@ -12,7 +12,7 @@ export const formatDateForAPI = (date: Date): string => {
 };
 
 /**
- * Get current date in Isle of Man timezone
+ * Get current date in Jersey timezone
  */
 export const getCurrentDate = (): Date => {
   return new Date();

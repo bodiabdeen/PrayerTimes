@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({onMenuPress, onAnnouncementsPress
       ]}>
       <View style={styles.content}>
         <Text style={[styles.title, {color: theme.textOnPrimary}]}>
-          The Isle of Man Islamic Centre
+          Jersey Islamic Centre
         </Text>
         
         <View style={styles.rightButtons}>

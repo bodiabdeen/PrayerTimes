@@ -86,7 +86,7 @@ export const fetchApiConfig = async (): Promise<ApiConfig | null> => {
       method: rawData?.method || 4,
       latitude: rawData?.latitude || 54.15,
       longitude: rawData?.longitude || -4.48,
-      timezone: 'Europe/Isle_of_Man',
+      timezone: 'Europe/Jersey',
       offsetMinutes: {
         fajr:    rawData?.offsets?.fajr    || 0,
         dhuhr:   rawData?.offsets?.dhuhr   || 0,

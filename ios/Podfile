@@ -16,7 +16,7 @@ prepare_react_native_project!
 use_frameworks! :linkage => :static
 
 
-target 'IOMPrayerTimes' do
+target 'JICPrayerTimes' do
   config = use_native_modules!
   
   # 👇 gRPC pods MUST be inside the target

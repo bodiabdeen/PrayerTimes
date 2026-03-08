@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">IOMPrayerTimes</string>
+    <string name="app_name">JIC Prayer Times</string>
     <string name="widget_description">Shows prayer times on your home screen</string>
     <string name="horizontal_widget_description">Shows all prayer times horizontally (4x1)</string>
 </resources>

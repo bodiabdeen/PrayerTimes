@@ -1,62 +1,72 @@
 export const Colors = {
   light: {
-    primary: '#0A2F35',
-    secondary: '#00A86B',      // Changed to darker green
-    accent: '#00A86B',         // Changed to darker green
+    primary: '#0D2B4E',
+    secondary: '#CAA55E',
+    accent: '#CAA55E',
     
-    background: '#F5F5F5',
+    background: '#F7F5F0',
     surface: '#FFFFFF',
-    header: '#0A2F35',
+    header: '#0D2B4E',
     
-    text: '#212121',
-    textSecondary: '#757575',
+    text: '#1A1A1A',
+    textSecondary: '#6B6B6B',
     textOnPrimary: '#FFFFFF',
     
-    border: '#E0E0E0',
-    divider: '#EEEEEE',
+    border: '#E3DDD5',
+    divider: '#E3DDD5',
     
-    success: '#00A86B',        // Darker green
-    warning: '#FF9800',
-    error: '#F44336',
-    info: '#2196F3',
+    success: '#2E7D32',
+    warning: '#E65100',
+    error: '#C62828',
+    info: '#1565C0',
     
     cardBackground: '#FFFFFF',
-    cardBorder: '#E0E0E0',
-    nextPrayerBorder: '#00A86B',  // Darker green
+    cardBorder: '#E3DDD5',
+    nextPrayerBorder: '#CAA55E',
     
-    announcementNormal: '#E0E0E0',
-    announcementImportant: '#FF9800',
-    announcementUrgent: '#F44336',
+    announcementNormal: '#E3DDD5',
+    announcementImportant: '#E65100',
+    announcementUrgent: '#C62828',
+    
+    // Gold gradient colors
+    goldDark: '#AA7E39',
+    goldMid: '#CAA55E',
+    goldHighlight: '#F2DA98',
   },
   
   dark: {
-    primary: '#00A86B',        // Darker green
-    secondary: '#0A2F35',
-    accent: '#00A86B',         // Darker green
+    primary: '#CAA55E',
+    secondary: '#0D2B4E',
+    accent: '#CAA55E',
     
-    background: '#121212',
-    surface: '#1E1E1E',
-    header: '#0A2F35',
+    background: '#000000',
+    surface: '#1C1A17',
+    header: '#0D2B4E',
     
-    text: '#FFFFFF',
-    textSecondary: '#B0B0B0',
+    text: '#F5F0E8',
+    textSecondary: '#A8A49E',
     textOnPrimary: '#FFFFFF',
     
-    border: '#2C2C2C',
-    divider: '#2C2C2C',
+    border: '#2A2520',
+    divider: '#2A2520',
     
-    success: '#00A86B',        // Darker green
-    warning: '#FFB74D',
-    error: '#EF5350',
-    info: '#64B5F6',
+    success: '#2E7D32',
+    warning: '#E65100',
+    error: '#C62828',
+    info: '#1565C0',
     
-    cardBackground: '#1E1E1E',
-    cardBorder: '#2C2C2C',
-    nextPrayerBorder: '#00A86B',  // Darker green
+    cardBackground: '#1C1A17',
+    cardBorder: '#2A2520',
+    nextPrayerBorder: '#CAA55E',
     
-    announcementNormal: '#2C2C2C',
-    announcementImportant: '#FF9800',
-    announcementUrgent: '#F44336',
+    announcementNormal: '#2A2520',
+    announcementImportant: '#E65100',
+    announcementUrgent: '#C62828',
+    
+    // Gold gradient colors
+    goldDark: '#AA7E39',
+    goldMid: '#CAA55E',
+    goldHighlight: '#F2DA98',
   },
 };
 

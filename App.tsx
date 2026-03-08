@@ -115,7 +115,7 @@ function AppContent(): React.JSX.Element {
       updateWidget(prayerData.prayers, nextPrayer);
 
       if (notificationsEnabled) {
-        scheduleAllPrayerNotifications(prayerData.prayers);
+        scheduleAllPrayerNotifications(prayerData.prayers, prayerData.hijriDate);
       }
     }
   }, [prayerData, notificationsEnabled]);

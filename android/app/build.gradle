@@ -46,7 +46,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.iomprayertimes"
+    namespace "com.jicprayertimes"
 
     // Required for 16 KB memory page size support (Android 15+ / Google Play)
     packaging {
@@ -56,12 +56,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.iomprayertimes"
+        applicationId "com.jicprayertimes"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // VERSION UPDATE: 1.2 (Build 16)
-        versionCode 16
-        versionName "1.2"
+        versionCode 1
+        versionName "1.0"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", (findProperty("newArchEnabled") ?: "true").toBoolean().toString()
         buildConfigField "boolean", "IS_HERMES_ENABLED", "(findProperty('hermesEnabled') ?: 'true').toBoolean()"
     }

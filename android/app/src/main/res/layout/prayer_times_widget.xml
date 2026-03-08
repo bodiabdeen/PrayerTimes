@@ -25,7 +25,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:background="#2000FF88"
+        android:background="#30CAA55E"
         android:padding="6dp"
         android:layout_marginBottom="4dp"
         android:gravity="center_vertical">
@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Fajr"
-            android:textColor="#00FF88"
+            android:textColor="#CAA55E"
             android:textSize="15sp"
             android:textStyle="bold"
             android:gravity="center"
