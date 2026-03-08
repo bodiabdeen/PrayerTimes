@@ -7,9 +7,14 @@ import {
 } from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 
+interface HeaderProps {
+  onMenuPress: () => void;
+  onAnnouncementsPress: () => void;
+  unreadCount: number;
+}
 
-export const Header: React.FC = () => {
-  const {isDark, toggleTheme, theme} = useTheme();
+export const Header: React.FC<HeaderProps> = ({onMenuPress, onAnnouncementsPress, unreadCount}) => {
+  const {theme} = useTheme();
 
   return (
     <View
@@ -22,24 +27,30 @@ export const Header: React.FC = () => {
           The Isle of Man Islamic Centre
         </Text>
         
-        <TouchableOpacity
-          onPress={toggleTheme}
-          style={styles.themeToggle}
-          activeOpacity={0.7}>
-          <Text style={styles.icon}>{isDark ? '🌙' : '☀️'}</Text>
-          <View style={[
-            styles.toggleTrack,
-            {backgroundColor: isDark ? theme.accent : '#ccc'}
-          ]}>
-            <View style={[
-              styles.toggleThumb,
-              {
-                backgroundColor: '#fff',
-                transform: [{translateX: isDark ? 22 : 2}]
-              }
-            ]} />
-          </View>
-        </TouchableOpacity>
+        <View style={styles.rightButtons}>
+          <TouchableOpacity
+            onPress={onAnnouncementsPress}
+            style={styles.announcementButton}
+            activeOpacity={0.7}>
+            <Text style={styles.bellIcon}>🔔</Text>
+            {unreadCount > 0 && (
+              <View style={[styles.badge, {backgroundColor: theme.error}]}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={onMenuPress}
+            style={styles.menuButton}
+            activeOpacity={0.7}>
+            <View style={styles.burgerIcon}>
+              <View style={[styles.burgerLine, {backgroundColor: theme.textOnPrimary}]} />
+              <View style={[styles.burgerLine, {backgroundColor: theme.textOnPrimary}]} />
+              <View style={[styles.burgerLine, {backgroundColor: theme.textOnPrimary}]} />
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -60,24 +71,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-  themeToggle: {
+  rightButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
-  icon: {
-    fontSize: 20,
-  },
-  toggleTrack: {
-    width: 48,
-    height: 24,
-    borderRadius: 12,
-    padding: 2,
+  announcementButton: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  bellIcon: {
+    fontSize: 24,
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  burgerIcon: {
+    width: 24,
+    height: 18,
+    justifyContent: 'space-between',
+  },
+  burgerLine: {
+    width: 24,
+    height: 3,
+    borderRadius: 2,
+  },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

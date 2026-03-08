@@ -113,7 +113,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
       asr: 'Asr',
       maghrib: 'Maghrib',
       isha: 'Isha',
-      jumaa: 'Jumaa',
+      jumaa: "Jumu'ah",
       taraweeh: 'Taraweeh',
     };
 

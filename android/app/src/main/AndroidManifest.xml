@@ -3,6 +3,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- CHANGE #6: Background fetch permissions -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
       android:name=".MainApplication"
@@ -24,25 +28,32 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      
+      <!-- Widget receivers -->
       <receiver
-    android:name=".widget.PrayerTimesWidget"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-    </intent-filter>
-    <meta-data
-        android:name="android.appwidget.provider"
-        android:resource="@xml/prayer_times_widget_info" />
-</receiver>
+        android:name=".widget.PrayerTimesWidget"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+            android:name="android.appwidget.provider"
+            android:resource="@xml/prayer_times_widget_info" />
+      </receiver>
+      
       <receiver
-    android:name=".widget.PrayerTimesWidgetHorizontal"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-    </intent-filter>
-    <meta-data
-        android:name="android.appwidget.provider"
-        android:resource="@xml/prayer_times_widget_horizontal_info" />
-</receiver>
+        android:name=".widget.PrayerTimesWidgetHorizontal"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+            android:name="android.appwidget.provider"
+            android:resource="@xml/prayer_times_widget_horizontal_info" />
+      </receiver>
+      
+      <!-- REMOVED: HeadlessTask service line -->
+      <!-- react-native-background-fetch registers its services automatically via autolinking -->
+      
     </application>
 </manifest>

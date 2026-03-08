@@ -1,12 +1,14 @@
 // src/services/notificationService.ts
 // Service for handling prayer time and announcement notifications
+// VERSION 1.1 - FIXED: Notification press opens app + refreshes
 
 import { Platform, PermissionsAndroid, Alert } from 'react-native';
 import notifee, { 
   AndroidImportance, 
   TriggerType,
   RepeatFrequency,
-  EventType 
+  EventType,
+  AndroidLaunchActivityFlag 
 } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Prayer } from '../types';
@@ -97,6 +99,7 @@ const parseTimeToDate = (timeStr: string): Date | null => {
 
 /**
  * Schedule notification for a specific event
+ * FIX: Added proper pressAction to open app
  */
 const scheduleEventNotification = async (
   id: string,
@@ -115,12 +118,20 @@ const scheduleEventNotification = async (
           importance: AndroidImportance.HIGH,
           pressAction: {
             id: 'default',
+            launchActivity: 'default', // This opens the app
           },
           sound: 'default',
+          // Add flags to ensure app opens properly
+          autoCancel: true,
         },
         ios: {
           sound: 'default',
           critical: true,
+          foregroundPresentationOptions: {
+            alert: true,
+            badge: true,
+            sound: true,
+          },
         },
       },
       {
@@ -137,6 +148,7 @@ const scheduleEventNotification = async (
 
 /**
  * Schedule all prayer event notifications
+ * CHANGE #3 & #4: Added Friday-specific logic for Dhuhr and Jumaa
  */
 export const scheduleAllPrayerNotifications = async (
   prayers: Prayer[]
@@ -153,6 +165,16 @@ export const scheduleAllPrayerNotifications = async (
 
       // Skip sunrise for special handling (it has no MAT/MIT)
       const isSunrise = prayer.name.toLowerCase() === 'sunrise';
+      
+      // CHANGE #3: Check if this is Dhuhr prayer
+      const isDhuhr = prayer.name.toLowerCase().includes('dhuhr');
+      
+      // CHANGE #4: Skip Jumu'ah in main loop - will be handled separately
+      const isJumaa = prayer.name.toLowerCase().includes('jumaa') || prayer.name.toLowerCase().includes("jumu'ah");
+      if (isJumaa) {
+        console.log("⏭️ Skipping Jumu'ah in main loop (will schedule separately for Fridays only)");
+        continue;
+      }
 
       // 1. Schedule APT (Prayer Start Time)
       if (prayer.apt && prayer.apt !== '--:--') {
@@ -168,28 +190,82 @@ export const scheduleAllPrayerNotifications = async (
       }
 
       // 2. Schedule MAT (Masjid Adhan) - Skip for sunrise
+      // CHANGE #3: For Dhuhr, only schedule if NOT Friday
       if (!isSunrise && prayer.mat && prayer.mat !== '--:--') {
         const matTime = parseTimeToDate(prayer.mat);
         if (matTime) {
-          await scheduleEventNotification(
-            `${prayerNameClean}_mat`,
-            `📢 ${prayer.name} - Adhan`,
-            `Adhan at the masjid at ${prayer.mat}`,
-            matTime
-          );
+          // Skip Dhuhr MAT on Fridays (day 5)
+          const shouldSchedule = !isDhuhr || matTime.getDay() !== 5;
+          
+          if (shouldSchedule) {
+            await scheduleEventNotification(
+              `${prayerNameClean}_mat`,
+              `📢 ${prayer.name} - Adhan`,
+              `Adhan at the masjid at ${prayer.mat}`,
+              matTime
+            );
+          } else {
+            console.log(`⏭️ Skipping Dhuhr MAT on Friday (will use Jumu'ah instead)`);
+          }
         }
       }
 
       // 3. Schedule MIT (Masjid Iqama) - Skip for sunrise
+      // CHANGE #3: For Dhuhr, only schedule if NOT Friday
       if (!isSunrise && prayer.mit && prayer.mit !== '--:--') {
         const mitTime = parseTimeToDate(prayer.mit);
         if (mitTime) {
+          // Skip Dhuhr MIT on Fridays (day 5)
+          const shouldSchedule = !isDhuhr || mitTime.getDay() !== 5;
+          
+          if (shouldSchedule) {
+            await scheduleEventNotification(
+              `${prayerNameClean}_mit`,
+              `🕋 ${prayer.name} - Iqama`,
+              `Congregation prayer starts at ${prayer.mit}`,
+              mitTime
+            );
+          } else {
+            console.log(`⏭️ Skipping Dhuhr MIT on Friday (will use Jumu'ah instead)`);
+          }
+        }
+      }
+    }
+
+    // CHANGE #4: Schedule Jumu'ah (Friday Prayer) notifications - ONLY ON FRIDAYS
+    const jumaaPrayer = prayers.find(p => p.name.toLowerCase().includes('jumaa') || p.name.toLowerCase().includes("jumu'ah"));
+    if (jumaaPrayer) {
+      console.log("🕌 Found Jumu'ah prayer, checking if Friday...");
+      
+      // Schedule MAT (Adhan/Khutba)
+      if (jumaaPrayer.mat && jumaaPrayer.mat !== '--:--') {
+        const jumaaMatTime = parseTimeToDate(jumaaPrayer.mat);
+        if (jumaaMatTime && jumaaMatTime.getDay() === 5) { // Only if Friday
           await scheduleEventNotification(
-            `${prayerNameClean}_mit`,
-            `🕋 ${prayer.name} - Iqama`,
-            `Congregation prayer starts at ${prayer.mit}`,
-            mitTime
+            'jumaa_mat',
+            "📢 Jumu'ah - Khutba & Adhan",
+            `Jumu'ah Khutba and Adhan at ${jumaaPrayer.mat}`,
+            jumaaMatTime
           );
+          console.log(`✅ Scheduled Jumu'ah MAT for Friday`);
+        } else {
+          console.log(`⏭️ Skipping Jumu'ah MAT (not Friday or invalid time)`);
+        }
+      }
+      
+      // Schedule MIT (Iqama)
+      if (jumaaPrayer.mit && jumaaPrayer.mit !== '--:--') {
+        const jumaaMitTime = parseTimeToDate(jumaaPrayer.mit);
+        if (jumaaMitTime && jumaaMitTime.getDay() === 5) { // Only if Friday
+          await scheduleEventNotification(
+            'jumaa_mit',
+            "🕋 Jumu'ah - Iqama",
+            `Jumu'ah prayer starts at ${jumaaPrayer.mit}`,
+            jumaaMitTime
+          );
+          console.log(`✅ Scheduled Jumu'ah MIT for Friday`);
+        } else {
+          console.log(`⏭️ Skipping Jumu'ah MIT (not Friday or invalid time)`);
         }
       }
     }
@@ -218,6 +294,7 @@ export const showDataRefreshedNotification = async (): Promise<void> => {
         smallIcon: 'ic_launcher',
         pressAction: {
           id: 'default',
+          launchActivity: 'default',
         },
         autoCancel: true,
       },
@@ -246,6 +323,7 @@ export const showUnreadAnnouncementsNotification = async (
         smallIcon: 'ic_launcher',
         pressAction: {
           id: 'open_announcements',
+          launchActivity: 'default',
         },
         autoCancel: true,
       },
@@ -281,7 +359,7 @@ export const getNotificationPreferences = async () => {
       adhan: true,            // MAT notifications
       iqama: true,            // MIT notifications
       sunrise: true,          // Sunrise notification
-      specialPrayers: true,   // Jumaa, Taraweeh, Eid
+      specialPrayers: true,   // Jumu'ah, Taraweeh, Eid
       dataRefresh: false,     // Data refresh notifications
       announcements: true,    // Unread announcements
     };

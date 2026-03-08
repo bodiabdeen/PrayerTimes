@@ -21,11 +21,12 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
     asr: {en: 'Asr Prayer', ar: 'صلاة العصر'},
     maghrib: {en: 'Maghrib Prayer', ar: 'صلاة المغرب'},
     isha: {en: 'Isha Prayer', ar: 'صلاة العشاء'},
-    jumaa: {en: 'Jumaa Prayer', ar: 'صلاة الجمعة'},
+    jumaa: {en: "Jumu'ah Prayer", ar: 'صلاة الجمعة'},
   };
 
+  // CHANGE #2: Updated Arabic text for "Prayer Start"
   const columnHeaders = [
-    {en: 'Prayer Start', ar: 'وقت بدء'},
+    {en: 'Prayer Start', ar: 'دخول وقت الصلاة'},
     {en: 'Masjid Adhan', ar: 'أذان المسجد'},
     {en: 'Masjid Iqama', ar: 'إقامة المسجد'},
   ];

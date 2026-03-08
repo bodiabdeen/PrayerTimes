@@ -24,9 +24,9 @@ const METHOD_NAMES: {[key: number]: string} = {
   14: 'Spiritual Administration of Muslims of Russia',
 };
 
-// School names mapping
+// School names mapping - CHANGE #1: Removed "Jafari"
 const SCHOOL_NAMES: {[key: number]: string} = {
-  0: 'Shafi, Maliki, Jafari, Hanbali',
+  0: 'Shafi, Maliki, Hanbali',
   1: 'Hanafi',
 };
 

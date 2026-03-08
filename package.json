@@ -1,6 +1,6 @@
 {
   "name": "IOMPrayerTimes",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -17,6 +17,7 @@
     "@react-native-firebase/firestore": "^23.8.6",
     "react": "^19.2.0",
     "react-native": "0.83.1",
+    "react-native-background-fetch": "^4.2.5",
     "react-native-safe-area-context": "^5.6.2"
   },
   "devDependencies": {
