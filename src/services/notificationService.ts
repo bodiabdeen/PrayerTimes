@@ -235,11 +235,24 @@ export const scheduleAllPrayerNotifications = async (
       const isEidAdha = prayer.name.toLowerCase().includes('eid al-adha') || prayer.name.toLowerCase().includes('عيد الأضحى');
       
       // Skip special prayers if not within their valid Hijri date range
-      if (hijriInfo) {
-        // Taraweeh: Only during Ramadan (month 9)
-        if (isTaraweeh && hijriInfo.month !== 9) {
-          console.log(`⏭️ Skipping Taraweeh (not Ramadan - current month: ${hijriInfo.month})`);
+      // IMPORTANT: If hijriInfo is null, skip ALL special prayers as we can't validate the date
+      if (isTaraweeh || isEidFitr || isEidAdha) {
+        if (!hijriInfo) {
+          console.log(`⏭️ Skipping ${prayer.name} (no valid Hijri date available)`);
           continue;
+        }
+        
+        // Taraweeh: From last day of Sha'ban through day before last of Ramadan
+        // Last day of Sha'ban can be 29 or 30
+        // Last day of Ramadan can be 29 or 30, so day before last is 28 or 29
+        if (isTaraweeh) {
+          const isLastDayOfShaban = (hijriInfo.month === 8 && (hijriInfo.day === 29 || hijriInfo.day === 30));
+          const isValidRamadanDay = (hijriInfo.month === 9 && hijriInfo.day >= 1 && hijriInfo.day <= 29);
+          
+          if (!isLastDayOfShaban && !isValidRamadanDay) {
+            console.log(`⏭️ Skipping Taraweeh (not in valid range - current: ${hijriInfo.day}/${hijriInfo.month})`);
+            continue;
+          }
         }
         
         // Eid al-Fitr: Only on 1 Shawwal (month 10, day 1)
