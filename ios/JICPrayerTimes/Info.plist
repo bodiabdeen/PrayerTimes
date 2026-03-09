@@ -35,21 +35,16 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	
-	<!-- CHANGE #5 & #6: Permission descriptions -->
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>We need permission to send you prayer time notifications so you never miss a prayer.</string>
-	
-	<!-- CHANGE #6: Background modes for background fetch -->
+	<key>RCTNewArchEnabled</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
-	
-	<key>RCTNewArchEnabled</key>
-	<false/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

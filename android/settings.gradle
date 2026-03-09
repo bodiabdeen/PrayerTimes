@@ -41,6 +41,6 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex ->
     ex.autolinkLibrariesFromCommand(autolinkCommand, rootDir)
 }
 
-rootProject.name = 'IOMPrayerTimes'
+rootProject.name = 'JICPrayerTimes'
 
 include ':app'

@@ -1,13 +1,13 @@
 //
-//  IOMPrayerTimes-Bridging-Header.h
-//  IOMPrayerTimes
+//  JICPrayerTimes-Bridging-Header.h
+//  JICPrayerTimes
 //
 
-#ifndef IOMPrayerTimes_Bridging_Header_h
-#define IOMPrayerTimes_Bridging_Header_h
+#ifndef JICPrayerTimes_Bridging_Header_h
+#define JICPrayerTimes_Bridging_Header_h
 
 #import <React/RCTAppDelegate.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTBridge.h>
 
-#endif /* IOMPrayerTimes_Bridging_Header_h */
+#endif /* JICPrayerTimes_Bridging_Header_h */
