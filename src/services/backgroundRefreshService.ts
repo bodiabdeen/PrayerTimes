@@ -117,7 +117,7 @@ export const configureBackgroundRefresh = async (
             // Reschedule notifications with new data
             if (data.prayers) {
               console.log('🔄 [BackgroundFetch] Rescheduling notifications...');
-              await scheduleAllPrayerNotifications(data.prayers, data.hijriDate);
+              await scheduleAllPrayerNotifications(data.prayers);
               console.log('✅ [BackgroundFetch] Notifications rescheduled');
             }
             
