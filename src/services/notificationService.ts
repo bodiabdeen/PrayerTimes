@@ -16,51 +16,6 @@ import { Prayer } from '../types';
 const CHANNEL_ID = 'prayer_times';
 const ANNOUNCEMENTS_CHANNEL_ID = 'announcements';
 
-// Hijri month names to numbers mapping
-const HIJRI_MONTHS: { [key: string]: number } = {
-  'Muharram': 1,
-  'Safar': 2,
-  'Rabi\' al-Awwal': 3,
-  'Rabi\' al-Thani': 4,
-  'Jumada al-Awwal': 5,
-  'Jumada al-Thani': 6,
-  'Rajab': 7,
-  'Sha\'ban': 8,
-  'Ramadan': 9,
-  'Ramadhan': 9, // Alternative spelling
-  'Shawwal': 10,
-  'Dhul-Qa\'dah': 11,
-  'Dhu al-Qi\'dah': 11, // Alternative spelling
-  'Dhul-Hijjah': 12,
-  'Dhu al-Hijjah': 12, // Alternative spelling
-};
-
-/**
- * Parse Hijri date string to extract day and month
- * Format: "15 Ramadan 1446 AH"
- */
-const parseHijriDate = (hijriDateStr: string): { day: number; month: number } | null => {
-  try {
-    // Split the string: "15 Ramadan 1446 AH" -> ["15", "Ramadan", "1446", "AH"]
-    const parts = hijriDateStr.split(' ');
-    if (parts.length < 2) return null;
-    
-    const day = parseInt(parts[0], 10);
-    const monthName = parts[1];
-    const month = HIJRI_MONTHS[monthName];
-    
-    if (isNaN(day) || !month) {
-      console.warn(`⚠️ Could not parse Hijri date: ${hijriDateStr}`);
-      return null;
-    }
-    
-    return { day, month };
-  } catch (error) {
-    console.error('Error parsing Hijri date:', error);
-    return null;
-  }
-};
-
 /**
  * Request notification permissions
  */
@@ -194,11 +149,9 @@ const scheduleEventNotification = async (
 /**
  * Schedule all prayer event notifications
  * CHANGE #3 & #4: Added Friday-specific logic for Dhuhr and Jumaa
- * CHANGE #5: Added Hijri date filtering for Taraweeh and Eid prayers
  */
 export const scheduleAllPrayerNotifications = async (
-  prayers: Prayer[],
-  hijriDate?: string
+  prayers: Prayer[]
 ): Promise<void> => {
   try {
     // Cancel all existing notifications
@@ -206,12 +159,6 @@ export const scheduleAllPrayerNotifications = async (
     await notifee.cancelTriggerNotifications();
 
     console.log('🔔 Scheduling all prayer notifications...');
-
-    // Parse Hijri date for special prayer filtering
-    const hijriInfo = hijriDate ? parseHijriDate(hijriDate) : null;
-    if (hijriInfo) {
-      console.log(`📅 Current Hijri date: Day ${hijriInfo.day}, Month ${hijriInfo.month}`);
-    }
 
     for (const prayer of prayers) {
       const prayerNameClean = prayer.name.replace(/\s+/g, '_').toLowerCase();
@@ -229,43 +176,14 @@ export const scheduleAllPrayerNotifications = async (
         continue;
       }
 
-      // CHANGE #5: Filter Taraweeh and Eid prayers based on Hijri date
+      // Skip Taraweeh and Eid prayers - no notifications for these
       const isTaraweeh = prayer.name.toLowerCase().includes('taraweeh') || prayer.name.toLowerCase().includes('تراويح');
       const isEidFitr = prayer.name.toLowerCase().includes('eid al-fitr') || prayer.name.toLowerCase().includes('عيد الفطر');
       const isEidAdha = prayer.name.toLowerCase().includes('eid al-adha') || prayer.name.toLowerCase().includes('عيد الأضحى');
       
-      // Skip special prayers if not within their valid Hijri date range
-      // IMPORTANT: If hijriInfo is null, skip ALL special prayers as we can't validate the date
       if (isTaraweeh || isEidFitr || isEidAdha) {
-        if (!hijriInfo) {
-          console.log(`⏭️ Skipping ${prayer.name} (no valid Hijri date available)`);
-          continue;
-        }
-        
-        // Taraweeh: From last day of Sha'ban through day before last of Ramadan
-        // Last day of Sha'ban can be 29 or 30
-        // Last day of Ramadan can be 29 or 30, so day before last is 28 or 29
-        if (isTaraweeh) {
-          const isLastDayOfShaban = (hijriInfo.month === 8 && (hijriInfo.day === 29 || hijriInfo.day === 30));
-          const isValidRamadanDay = (hijriInfo.month === 9 && hijriInfo.day >= 1 && hijriInfo.day <= 29);
-          
-          if (!isLastDayOfShaban && !isValidRamadanDay) {
-            console.log(`⏭️ Skipping Taraweeh (not in valid range - current: ${hijriInfo.day}/${hijriInfo.month})`);
-            continue;
-          }
-        }
-        
-        // Eid al-Fitr: Only on 1 Shawwal (month 10, day 1)
-        if (isEidFitr && (hijriInfo.month !== 10 || hijriInfo.day !== 1)) {
-          console.log(`⏭️ Skipping Eid al-Fitr (not 1 Shawwal - current: ${hijriInfo.day}/${hijriInfo.month})`);
-          continue;
-        }
-        
-        // Eid al-Adha: Only on 10 Dhul-Hijjah (month 12, day 10)
-        if (isEidAdha && (hijriInfo.month !== 12 || hijriInfo.day !== 10)) {
-          console.log(`⏭️ Skipping Eid al-Adha (not 10 Dhul-Hijjah - current: ${hijriInfo.day}/${hijriInfo.month})`);
-          continue;
-        }
+        console.log(`⏭️ Skipping ${prayer.name} (Taraweeh/Eid notifications disabled)`);
+        continue;
       }
 
       // 1. Schedule APT (Prayer Start Time)
