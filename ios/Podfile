@@ -181,6 +181,18 @@ target 'IOMPrayerTimes' do
       end
     end
 
+    # Fix widgetExtension deployment target — containerBackground & widget scene require iOS 17+
+    installer.aggregate_targets.each do |aggregate_target|
+      aggregate_target.user_project.native_targets.each do |target|
+        if target.name == 'widgetExtension'
+          target.build_configurations.each do |config|
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+          end
+          puts "Set widgetExtension IPHONEOS_DEPLOYMENT_TARGET to 17.0"
+        end
+      end
+    end
+
     # Fix [RNFB] Core Configuration build cycle AND non-modular-include errors on main app targets.
     # - CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES must also be set on user project
     #   targets (AppDelegate.mm, main.m, RNWidgetModule.m, etc.), not just pod targets.
