@@ -15,113 +15,118 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
   const {theme, formatTime} = useTheme();
 
   const prayerLabels: {[key: string]: {en: string; ar: string}} = {
-    fajr: {en: 'Fajr Prayer', ar: 'صلاة الفجر'},
-    sunrise: {en: 'Sunrise', ar: 'الشروق'},
-    dhuhr: {en: 'Dhuhr Prayer', ar: 'صلاة الظهر'},
-    asr: {en: 'Asr Prayer', ar: 'صلاة العصر'},
-    maghrib: {en: 'Maghrib Prayer', ar: 'صلاة المغرب'},
-    isha: {en: 'Isha Prayer', ar: 'صلاة العشاء'},
-    jumaa: {en: "Jumu'ah Prayer", ar: 'صلاة الجمعة'},
+    fajr:      {en: 'Fajr',          ar: 'الفجر'},
+    sunrise:   {en: 'Sunrise',       ar: 'الشروق'},
+    dhuhr:     {en: 'Dhuhr',         ar: 'الظهر'},
+    asr:       {en: 'Asr',           ar: 'العصر'},
+    maghrib:   {en: 'Maghrib',       ar: 'المغرب'},
+    isha:      {en: 'Isha',          ar: 'العشاء'},
+    jumaa:     {en: "Jumu'ah",       ar: 'الجمعة'},
+    taraweeh:  {en: 'Taraweeh',      ar: 'التراويح'},
+    eidAdha:   {en: 'Eid al-Adha',   ar: 'عيد الأضحى'},
+    eidFitr:   {en: 'Eid al-Fitr',   ar: 'عيد الفطر'},
   };
 
-  // CHANGE #2: Updated Arabic text for "Prayer Start"
-  const columnHeaders = [
-    {en: 'Prayer Start', ar: 'دخول وقت الصلاة'},
-    {en: 'Masjid Adhan', ar: 'أذان المسجد'},
-    {en: 'Masjid Iqama', ar: 'إقامة المسجد'},
-  ];
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {borderColor: theme.cardBorder}]}>
+
+      {/* Column headers — rendered once */}
+      <View style={[styles.headerRow, {backgroundColor: theme.header}]}>
+        <View style={styles.nameCol} />
+        <View style={styles.timeCol}>
+          <Text style={styles.headerEn}>Prayer{'\n'}Start</Text>
+          <Text style={styles.headerAr}>دخول وقت{'\n'}الصلاة</Text>
+        </View>
+        <View style={styles.timeCol}>
+          <Text style={styles.headerEn}>Masjid{'\n'}Adhan</Text>
+          <Text style={styles.headerAr}>أذان{'\n'}المسجد</Text>
+        </View>
+        <View style={styles.timeCol}>
+          <Text style={styles.headerEn}>Masjid{'\n'}Iqama</Text>
+          <Text style={styles.headerAr}>إقامة{'\n'}المسجد</Text>
+        </View>
+      </View>
+
+      {/* Prayer rows */}
       {prayers.map((prayer, index) => {
         const isNext = prayer.name === nextPrayerName;
         const label = prayerLabels[prayer.name] || {en: prayer.name, ar: ''};
+        const isLast = index === prayers.length - 1;
 
         return (
           <View
             key={`${prayer.name}-${index}`}
             style={[
-              styles.prayerCard,
+              styles.row,
               {
-                backgroundColor: theme.cardBackground,
-                borderColor: isNext ? theme.nextPrayerBorder : theme.cardBorder,
-                shadowColor: theme.text,
+                backgroundColor: isNext ? theme.cardBackground : theme.cardBackground,
+                borderBottomColor: isLast ? 'transparent' : theme.cardBorder,
               },
-              isNext && styles.nextPrayerCard,
+              isNext && {backgroundColor: theme.nextPrayerBorder + '14'},
             ]}>
-            <View style={styles.prayerHeader}>
-              <Text style={[styles.prayerName, {color: theme.text}]}>
+
+            {/* Left: prayer name */}
+            <View style={styles.nameCol}>
+              {isNext && (
+                <View style={[styles.nextBar, {backgroundColor: theme.nextPrayerBorder}]} />
+              )}
+              <Text
+                style={[
+                  styles.nameEn,
+                  {color: isNext ? theme.nextPrayerBorder : theme.text},
+                ]}>
                 {label.en}
               </Text>
-              <Text style={[styles.prayerNameArabic, {color: theme.textSecondary}]}>
+              <Text style={[styles.nameAr, {color: theme.textSecondary}]}>
                 {label.ar}
               </Text>
             </View>
 
-            {/* Special prayers (Taraweeh, Eid) show only one time */}
+            {/* Special prayers (Taraweeh, Eid) show one time spanning all cols */}
             {prayer.isSpecial ? (
-              <View style={styles.specialPrayerTime}>
-                <Text style={[styles.specialTimeLabel, {color: theme.textSecondary}]}>
-                  Time / الوقت
-                </Text>
-                <Text style={[
-                  styles.specialTime,
-                  {color: theme.text},
-                  isNext && {color: theme.accent, fontWeight: 'bold'},
-                ]}>
+              <View style={styles.specialSpan}>
+                <Text
+                  style={[
+                    styles.timeValue,
+                    {color: isNext ? theme.nextPrayerBorder : theme.text},
+                    isNext && styles.timeValueNext,
+                  ]}>
                   {formatTime(prayer.mit || '--:--')}
                 </Text>
               </View>
             ) : (
-              <View style={styles.timesRow}>
-                <View style={styles.timeColumn}>
-                  <Text style={[styles.columnHeader, {color: theme.textSecondary}]}>
-                    {columnHeaders[0].en}
-                  </Text>
-                  <Text style={[styles.columnHeaderArabic, {color: theme.textSecondary}]}>
-                    {columnHeaders[0].ar}
-                  </Text>
-                  <Text style={[
-                    styles.time,
-                    {color: theme.text},
-                    isNext && {color: theme.accent, fontWeight: 'bold'},
-                  ]}>
+              <>
+                <View style={styles.timeCol}>
+                  <Text
+                    style={[
+                      styles.timeValue,
+                      {color: isNext ? theme.nextPrayerBorder : theme.text},
+                      isNext && styles.timeValueNext,
+                    ]}>
                     {formatTime(prayer.apt || '--:--')}
                   </Text>
                 </View>
-
-                <View style={styles.timeColumn}>
-                  <Text style={[styles.columnHeader, {color: theme.textSecondary}]}>
-                    {columnHeaders[1].en}
-                  </Text>
-                  <Text style={[styles.columnHeaderArabic, {color: theme.textSecondary}]}>
-                    {columnHeaders[1].ar}
-                  </Text>
-                  <Text style={[
-                    styles.time,
-                    {color: theme.text},
-                    isNext && {color: theme.accent, fontWeight: 'bold'},
-                  ]}>
+                <View style={styles.timeCol}>
+                  <Text
+                    style={[
+                      styles.timeValue,
+                      {color: isNext ? theme.nextPrayerBorder : theme.text},
+                      isNext && styles.timeValueNext,
+                    ]}>
                     {formatTime(prayer.mat || '--:--')}
                   </Text>
                 </View>
-
-                <View style={styles.timeColumn}>
-                  <Text style={[styles.columnHeader, {color: theme.textSecondary}]}>
-                    {columnHeaders[2].en}
-                  </Text>
-                  <Text style={[styles.columnHeaderArabic, {color: theme.textSecondary}]}>
-                    {columnHeaders[2].ar}
-                  </Text>
-                  <Text style={[
-                    styles.time,
-                    {color: theme.text},
-                    isNext && {color: theme.accent, fontWeight: 'bold'},
-                  ]}>
+                <View style={styles.timeCol}>
+                  <Text
+                    style={[
+                      styles.timeValue,
+                      {color: isNext ? theme.nextPrayerBorder : theme.text},
+                      isNext && styles.timeValueNext,
+                    ]}>
                     {formatTime(prayer.mit || '--:--')}
                   </Text>
                 </View>
-              </View>
+              </>
             )}
           </View>
         );
@@ -132,66 +137,90 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  prayerCard: {
+    marginHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    padding: 16,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    overflow: 'hidden',
   },
-  nextPrayerCard: {
-    borderWidth: 2,
-    shadowOpacity: 0.15,
-    elevation: 3,
-  },
-  prayerHeader: {
-    marginBottom: 12,
-  },
-  prayerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  prayerNameArabic: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  timesRow: {
+
+  /* ── Column header bar ── */
+  headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
-  timeColumn: {
+  headerEn: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    lineHeight: 13,
+  },
+  headerAr: {
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
+    marginTop: 2,
+    lineHeight: 12,
+  },
+
+  /* ── Row ── */
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingRight: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    position: 'relative',
+  },
+
+  /* ── Name column (left) ── */
+  nameCol: {
+    width: 112,
+    paddingLeft: 12,
+    paddingRight: 6,
+    flexShrink: 0,
+    position: 'relative',
+  },
+  nextBar: {
+    position: 'absolute',
+    left: 0,
+    top: -10,
+    bottom: -10,
+    width: 3,
+    borderRadius: 2,
+  },
+  nameEn: {
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 15,
+  },
+  nameAr: {
+    fontSize: 10,
+    marginTop: 1,
+    lineHeight: 13,
+  },
+
+  /* ── Time columns ── */
+  timeCol: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  columnHeader: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  columnHeaderArabic: {
-    fontSize: 10,
-    marginTop: 2,
-    marginBottom: 8,
-  },
-  time: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  specialPrayerTime: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  specialTimeLabel: {
+  timeValue: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 8,
   },
-  specialTime: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  timeValueNext: {
+    fontWeight: '800',
+  },
+
+  /* ── Special prayer (spans time cols) ── */
+  specialSpan: {
+    flex: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
