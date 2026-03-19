@@ -272,7 +272,7 @@ function AppContent(): React.JSX.Element {
         />
         <PrayerTimesTable prayers={prayerData.prayers} nextPrayerName={currentNextPrayer?.name || null} />
         <ConfigInfo config={prayerData.apiConfig || null} />
-        <View style={{height: 140}} />
+        <View style={{height: 72}} />
       </ScrollView>
 
       <TouchableOpacity
@@ -319,7 +319,7 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {flex: 1},
   scrollView: {flex: 1},
-  scrollContent: {paddingBottom: 20},
+  scrollContent: {paddingBottom: 8},
   errorContainer: {flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20},
   errorText: {fontSize: 16, textAlign: 'center', marginBottom: 20},
   retryButton: {paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8},
