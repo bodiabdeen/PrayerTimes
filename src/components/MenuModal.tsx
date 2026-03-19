@@ -1,3 +1,5 @@
+// src/components/MenuModal.tsx
+
 import React, {useState, useEffect} from 'react';
 import {
   Modal,
@@ -10,6 +12,7 @@ import {
 } from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 import {fetchMenuLinks} from '../services/firebaseService';
+import {AthanSettingsModal} from './AthanSettingsModal';
 
 interface MenuModalProps {
   visible: boolean;
@@ -31,6 +34,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
 }) => {
   const {isDark, toggleTheme, theme, timeFormat, toggleTimeFormat} = useTheme();
   const [menuLinks, setMenuLinks] = useState<MenuLink[]>([]);
+  const [showAthanSettings, setShowAthanSettings] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -50,74 +54,99 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}>
-      <TouchableOpacity
-        style={styles.overlay}
-        activeOpacity={1}
-        onPress={onClose}>
-        <View style={[styles.menu, {backgroundColor: theme.cardBackground}]} onStartShouldSetResponder={() => true}>
-          <ScrollView style={styles.scrollView}>
-            {/* Settings Section */}
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, {color: theme.textSecondary}]}>SETTINGS</Text>
-              
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  toggleTheme();
-                  onClose();
-                }}>
-                <Text style={styles.icon}>{isDark ? '🌙' : '☀️'}</Text>
-                <Text style={[styles.menuText, {color: theme.text}]}>
-                  {isDark ? 'Dark Mode' : 'Light Mode'}
+    <>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        onRequestClose={onClose}>
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={onClose}>
+          <View
+            style={[styles.menu, {backgroundColor: theme.cardBackground}]}
+            onStartShouldSetResponder={() => true}>
+            <ScrollView style={styles.scrollView}>
+              {/* Settings Section */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, {color: theme.textSecondary}]}>
+                  SETTINGS
                 </Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  toggleTimeFormat();
-                  onClose();
-                }}>
-                <Text style={styles.icon}>🕐</Text>
-                <Text style={[styles.menuText, {color: theme.text}]}>
-                  {timeFormat === '24h' ? '24 Hour Format' : '12 Hour Format'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => {
+                    toggleTheme();
+                    onClose();
+                  }}>
+                  <Text style={styles.icon}>{isDark ? '🌙' : '☀️'}</Text>
+                  <Text style={[styles.menuText, {color: theme.text}]}>
+                    {isDark ? 'Dark Mode' : 'Light Mode'}
+                  </Text>
+                </TouchableOpacity>
 
-            {/* Links Section */}
-            {menuLinks.length > 0 && (
-              <View style={[styles.section, styles.linksSection]}>
-                <Text style={[styles.sectionTitle, {color: theme.textSecondary}]}>LINKS</Text>
-                
-                {menuLinks.map((link) => (
-                  <TouchableOpacity
-                    key={link.id}
-                    style={styles.menuItem}
-                    onPress={() => openLink(link.url)}>
-                    <Text style={styles.icon}>{link.icon}</Text>
-                    <Text style={[styles.menuText, {color: theme.text}]}>
-                      {link.displayName}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => {
+                    toggleTimeFormat();
+                    onClose();
+                  }}>
+                  <Text style={styles.icon}>🕐</Text>
+                  <Text style={[styles.menuText, {color: theme.text}]}>
+                    {timeFormat === '24h' ? '24 Hour Format' : '12 Hour Format'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Athan Settings */}
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => setShowAthanSettings(true)}>
+                  <Text style={styles.icon}>🔊</Text>
+                  <Text style={[styles.menuText, {color: theme.text}]}>
+                    Athan Settings
+                  </Text>
+                </TouchableOpacity>
               </View>
-            )}
 
-            <TouchableOpacity
-              style={[styles.closeButton, {backgroundColor: theme.accent}]}
-              onPress={onClose}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </TouchableOpacity>
-    </Modal>
+              {/* Links Section */}
+              {menuLinks.length > 0 && (
+                <View style={[styles.section, styles.linksSection]}>
+                  <Text
+                    style={[styles.sectionTitle, {color: theme.textSecondary}]}>
+                    LINKS
+                  </Text>
+
+                  {menuLinks.map(link => (
+                    <TouchableOpacity
+                      key={link.id}
+                      style={styles.menuItem}
+                      onPress={() => openLink(link.url)}>
+                      <Text style={styles.icon}>{link.icon}</Text>
+                      <Text style={[styles.menuText, {color: theme.text}]}>
+                        {link.displayName}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[styles.closeButton, {backgroundColor: theme.accent}]}
+                onPress={onClose}>
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Athan Settings opens on top of MenuModal */}
+      <AthanSettingsModal
+        visible={showAthanSettings}
+        onClose={() => setShowAthanSettings(false)}
+      />
+    </>
   );
 };
 
