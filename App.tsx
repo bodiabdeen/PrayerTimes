@@ -272,7 +272,7 @@ function AppContent(): React.JSX.Element {
         />
         <PrayerTimesTable prayers={prayerData.prayers} nextPrayerName={currentNextPrayer?.name || null} />
         <ConfigInfo config={prayerData.apiConfig || null} />
-        <View style={{height: 80}} />
+        <View style={{height: 140}} />
       </ScrollView>
 
       <TouchableOpacity
