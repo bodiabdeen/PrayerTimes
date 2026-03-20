@@ -19,6 +19,7 @@ import {CountdownTimer} from './src/components/CountdownTimer';
 import {PrayerTimesTable} from './src/components/PrayerTimesTable';
 import {AnnouncementsModal} from './src/components/AnnouncementsModal';
 import {MenuModal} from './src/components/MenuModal';
+import {AthanSettingsModal} from './src/components/AthanSettingsModal';
 import {LoadingSpinner} from './src/components/LoadingSpinner';
 import {ConfigInfo} from './src/components/ConfigInfo';
 import {fetchAllPrayerData} from './src/services/firebaseService';
@@ -47,6 +48,7 @@ function AppContent(): React.JSX.Element {
   const [isOffline, setIsOffline] = useState(false);
   const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showAthanSettings, setShowAthanSettings] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentNextPrayer, setCurrentNextPrayer] = useState<typeof prayerData extends {prayers: any[]} ? ReturnType<typeof getNextPrayer> : null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -292,6 +294,12 @@ function AppContent(): React.JSX.Element {
         visible={showMenu}
         onClose={() => setShowMenu(false)}
         onRefresh={handleRefresh}
+        onAthanSettings={() => setShowAthanSettings(true)}
+      />
+
+      <AthanSettingsModal
+        visible={showAthanSettings}
+        onClose={() => setShowAthanSettings(false)}
       />
 
       <AnnouncementsModal
