@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({onMenuPress, onAnnouncementsPress
     <View
       style={[
         styles.container,
-        {backgroundColor: theme.header, paddingTop: 12 },
+        {backgroundColor: theme.header, paddingTop: 8},
       ]}>
       <View style={styles.content}>
         <Text style={[styles.title, {color: theme.textOnPrimary}]}>
@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({onMenuPress, onAnnouncementsPress
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 16,
+    paddingBottom: 8,
     paddingHorizontal: 16,
   },
   content: {

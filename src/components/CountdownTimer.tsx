@@ -171,20 +171,20 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginVertical: 12,
-    padding: 20,
+    marginVertical: 6,
+    padding: 12,
     borderRadius: 16,
     borderWidth: 2,
     alignItems: 'center',
   },
   label: {
     fontSize: 14,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   prayerName: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 6,
     textAlign: 'center',
   },
   countdown: {

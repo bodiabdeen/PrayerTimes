@@ -37,22 +37,22 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 8,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 2,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    marginBottom: 12,
+    marginBottom: 6,
   },
   gregorian: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   hijri: {
     fontSize: 14,
