@@ -34,7 +34,7 @@ const FEATURES = [
     platform: 'ios',
   },
   {
-    icon: '🔔',
+    icon: '☰',
     title: 'Athan Settings',
     description:
       'Customise your Athan experience — choose which prayers play the Athan, toggle notification sounds, and more from the menu.',

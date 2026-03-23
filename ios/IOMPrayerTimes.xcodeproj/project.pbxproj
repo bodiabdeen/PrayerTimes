@@ -11,9 +11,9 @@
 		13B07FC01A68108700A75B9A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* GoogleService-Info.plist */; };
 		13B07FDD1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FD91A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FDE1A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FDA1A68108700A75B9A /* main.m */; };
+		3E9918B32F718A70007926C9 /* athan_short_takbeer.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3E9918B22F718A70007926C9 /* athan_short_takbeer.mp3 */; };
 		3EE031362F6C59F1004C437E /* adhan_madinah.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3EE031322F6C59F1004C437E /* adhan_madinah.mp3 */; };
 		3EE031372F6C59F1004C437E /* naghshbandi.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3EE031352F6C59F1004C437E /* naghshbandi.mp3 */; };
-		3EE031382F6C59F1004C437E /* adhan_halab.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3EE031312F6C59F1004C437E /* adhan_halab.mp3 */; };
 		3EE031392F6C59F1004C437E /* ahmad_al_nafees.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3EE031342F6C59F1004C437E /* ahmad_al_nafees.mp3 */; };
 		3EE0313A2F6C59F1004C437E /* adhan_makkah.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3EE031332F6C59F1004C437E /* adhan_makkah.mp3 */; };
 		3EE0313B2F6C59F1004C437E /* adhan_egypt.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3EE031302F6C59F1004C437E /* adhan_egypt.mp3 */; };
@@ -68,10 +68,10 @@
 		13B07FD91A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = IOMPrayerTimes/AppDelegate.mm; sourceTree = "<group>"; };
 		13B07FDA1A68108700A75B9A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = main.m; path = IOMPrayerTimes/main.m; sourceTree = "<group>"; };
 		13B07FDB1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = IOMPrayerTimes/AppDelegate.h; sourceTree = "<group>"; };
+		3E9918B22F718A70007926C9 /* athan_short_takbeer.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = athan_short_takbeer.mp3; sourceTree = "<group>"; };
 		3EE0312E2F6C59F1004C437E /* abdul_basit.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = abdul_basit.mp3; sourceTree = "<group>"; };
 		3EE0312F2F6C59F1004C437E /* adhan_alaqsa.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = adhan_alaqsa.mp3; sourceTree = "<group>"; };
 		3EE031302F6C59F1004C437E /* adhan_egypt.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = adhan_egypt.mp3; sourceTree = "<group>"; };
-		3EE031312F6C59F1004C437E /* adhan_halab.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = adhan_halab.mp3; sourceTree = "<group>"; };
 		3EE031322F6C59F1004C437E /* adhan_madinah.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = adhan_madinah.mp3; sourceTree = "<group>"; };
 		3EE031332F6C59F1004C437E /* adhan_makkah.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = adhan_makkah.mp3; sourceTree = "<group>"; };
 		3EE031342F6C59F1004C437E /* ahmad_al_nafees.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = ahmad_al_nafees.mp3; sourceTree = "<group>"; };
@@ -189,10 +189,10 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				3E9918B22F718A70007926C9 /* athan_short_takbeer.mp3 */,
 				3EE0312E2F6C59F1004C437E /* abdul_basit.mp3 */,
 				3EE0312F2F6C59F1004C437E /* adhan_alaqsa.mp3 */,
 				3EE031302F6C59F1004C437E /* adhan_egypt.mp3 */,
-				3EE031312F6C59F1004C437E /* adhan_halab.mp3 */,
 				3EE031322F6C59F1004C437E /* adhan_madinah.mp3 */,
 				3EE031332F6C59F1004C437E /* adhan_makkah.mp3 */,
 				3EE031342F6C59F1004C437E /* ahmad_al_nafees.mp3 */,
@@ -321,11 +321,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
+				3E9918B32F718A70007926C9 /* athan_short_takbeer.mp3 in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FC01A68108700A75B9A /* GoogleService-Info.plist in Resources */,
 				3EE031362F6C59F1004C437E /* adhan_madinah.mp3 in Resources */,
 				3EE031372F6C59F1004C437E /* naghshbandi.mp3 in Resources */,
-				3EE031382F6C59F1004C437E /* adhan_halab.mp3 in Resources */,
 				3EE031392F6C59F1004C437E /* ahmad_al_nafees.mp3 in Resources */,
 				3EE0313A2F6C59F1004C437E /* adhan_makkah.mp3 in Resources */,
 				3EE0313B2F6C59F1004C437E /* adhan_egypt.mp3 in Resources */,
