@@ -41,10 +41,10 @@ export interface SoundOption {
 //   iOS     : add to Xcode project (IOMPrayerTimes target)
 
 export const ATHAN_SOUNDS: SoundOption[] = [
+  {id: 'athan_short_takbeer', name: 'Short Takbeer (13s)', fileName: 'athan_short_takbeer'},
   {id: 'adhan_makkah',    name: 'Makkah',           fileName: 'adhan_makkah'},
   {id: 'adhan_madinah',   name: 'Madinah',          fileName: 'adhan_madinah'},
   {id: 'adhan_egypt',     name: 'Egypt',            fileName: 'adhan_egypt'},
-  {id: 'adhan_halab',     name: 'Halab (Aleppo)',   fileName: 'adhan_halab'},
   {id: 'adhan_alaqsa',    name: 'Al-Aqsa',          fileName: 'adhan_alaqsa'},
   {id: 'ahmad_al_nafees', name: 'Ahmad Al-Nafees',  fileName: 'ahmad_al_nafees'},
   {id: 'naghshbandi',     name: 'Naghshbandi',      fileName: 'naghshbandi'},

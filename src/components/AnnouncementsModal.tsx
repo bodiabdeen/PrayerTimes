@@ -47,16 +47,34 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
     const newReadIds = new Set(readIds);
     newReadIds.add(id);
     setReadIds(newReadIds);
-    
+
     try {
       await AsyncStorage.setItem(
         '@read_announcements',
-        JSON.stringify(Array.from(newReadIds))
+        JSON.stringify(Array.from(newReadIds)),
       );
     } catch (error) {
       console.error('Error saving read status:', error);
     }
   };
+
+  const markAllAsRead = async () => {
+    const allIds = new Set(announcements.map(a => a.id));
+    setReadIds(allIds);
+
+    try {
+      await AsyncStorage.setItem(
+        '@read_announcements',
+        JSON.stringify(Array.from(allIds)),
+      );
+    } catch (error) {
+      console.error('Error saving read status:', error);
+    }
+  };
+
+  const allRead =
+    announcements.length > 0 &&
+    announcements.every(a => readIds.has(a.id));
 
   const getPriorityColor = (priority: string): string => {
     switch (priority) {
@@ -72,13 +90,16 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
   const formatDate = (dateString: string): string => {
     try {
       const date = new Date(dateString);
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
       const month = months[date.getMonth()];
       const day = date.getDate();
       const year = date.getFullYear();
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      
+
       return `${month} ${day}, ${year} ${hours}:${minutes}`;
     } catch (error) {
       return dateString;
@@ -92,14 +113,29 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
       transparent={true}
       onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.modalContainer, {backgroundColor: theme.background}]}>
+        <View
+          style={[styles.modalContainer, {backgroundColor: theme.background}]}>
           <View style={[styles.header, {borderBottomColor: theme.border}]}>
             <Text style={[styles.headerTitle, {color: theme.text}]}>
               Announcements
             </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={[styles.closeText, {color: theme.accent}]}>✕</Text>
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              {announcements.length > 0 && !allRead && (
+                <TouchableOpacity
+                  onPress={markAllAsRead}
+                  style={[
+                    styles.markAllButton,
+                    {borderColor: theme.accent},
+                  ]}>
+                  <Text style={[styles.markAllText, {color: theme.accent}]}>
+                    Mark all read
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Text style={[styles.closeText, {color: theme.accent}]}>✕</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView style={styles.scrollView}>
@@ -110,7 +146,7 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
                 </Text>
               </View>
             ) : (
-              announcements.map((announcement) => {
+              announcements.map(announcement => {
                 const isRead = readIds.has(announcement.id);
                 return (
                   <TouchableOpacity
@@ -125,25 +161,32 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
                     ]}
                     onPress={() => markAsRead(announcement.id)}>
                     {!isRead && (
-                      <View style={[styles.unreadDot, {backgroundColor: theme.accent}]} />
+                      <View
+                        style={[
+                          styles.unreadDot,
+                          {backgroundColor: theme.accent},
+                        ]}
+                      />
                     )}
-                    
+
                     {announcement.title && (
                       <Text style={[styles.title, {color: theme.text}]}>
                         {announcement.title}
                       </Text>
                     )}
-                    
-                    <Text style={[styles.message, {color: theme.textSecondary}]}>
+
+                    <Text
+                      style={[styles.message, {color: theme.textSecondary}]}>
                       {announcement.message}
                     </Text>
-                    
+
                     <Text style={[styles.date, {color: theme.textSecondary}]}>
                       {formatDate(announcement.createdAt)}
                     </Text>
-                    
+
                     {isRead && (
-                      <Text style={[styles.readLabel, {color: theme.textSecondary}]}>
+                      <Text
+                        style={[styles.readLabel, {color: theme.textSecondary}]}>
                         ✓ Read
                       </Text>
                     )}
@@ -180,6 +223,21 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  markAllButton: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  markAllText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   closeButton: {
     padding: 4,
