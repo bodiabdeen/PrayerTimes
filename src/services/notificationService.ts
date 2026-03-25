@@ -145,7 +145,8 @@ const resolveAthanChannel = (
 
   return {
     androidChannelId: getAthanChannelId(soundId),
-    iosSound: `${soundOption.iosFile}.mp3`,
+    // iOS expects the sound filename as it exists in the app bundle (include extension).
+    iosSound: `${soundOption.fileName}.mp3`,
   };
 };
 

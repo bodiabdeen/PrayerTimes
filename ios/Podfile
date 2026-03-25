@@ -208,7 +208,6 @@ target 'IOMPrayerTimes' do
           config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
         end
 
-        # Move RNFB phase to top AND clear its input/output paths to break the build cycle
         phase = target.build_phases.find do |p|
           p.respond_to?(:name) && p.name == '[CP-User] [RNFB] Core Configuration'
         end
@@ -216,8 +215,8 @@ target 'IOMPrayerTimes' do
           phase.input_paths = []
           phase.output_paths = []
           target.build_phases.delete(phase)
-          target.build_phases.unshift(phase)
-          puts "Moved [RNFB] Core Configuration to top of #{target.name} build phases"
+          target.build_phases.push(phase)
+          puts "Moved [RNFB] Core Configuration to end of #{target.name} build phases"
         end
       end
 
