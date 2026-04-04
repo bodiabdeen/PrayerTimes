@@ -19,6 +19,8 @@ import {CountdownTimer} from './src/components/CountdownTimer';
 import {PrayerTimesTable} from './src/components/PrayerTimesTable';
 import {AnnouncementsModal} from './src/components/AnnouncementsModal';
 import {MenuModal} from './src/components/MenuModal';
+import {AthanSettingsModal} from './src/components/AthanSettingsModal';
+import {WhatsNewModal} from './src/components/WhatsNewModal';
 import {LoadingSpinner} from './src/components/LoadingSpinner';
 import {ConfigInfo} from './src/components/ConfigInfo';
 import {fetchAllPrayerData} from './src/services/firebaseService';
@@ -37,6 +39,10 @@ import {configureBackgroundRefresh} from './src/services/backgroundRefreshServic
 
 const AUTO_REFRESH_INTERVAL = 1 * 60 * 60 * 1000;
 
+// Bump this version string with each release that has new features to announce.
+const WHATS_NEW_VERSION = '1.3.0';
+const WHATS_NEW_KEY = `@whats_new_shown_${WHATS_NEW_VERSION}`;
+
 function AppContent(): React.JSX.Element {
   const {theme} = useTheme();
   const insets = useSafeAreaInsets();
@@ -47,6 +53,8 @@ function AppContent(): React.JSX.Element {
   const [isOffline, setIsOffline] = useState(false);
   const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showAthanSettings, setShowAthanSettings] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentNextPrayer, setCurrentNextPrayer] = useState<typeof prayerData extends {prayers: any[]} ? ReturnType<typeof getNextPrayer> : null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -72,6 +80,26 @@ function AppContent(): React.JSX.Element {
       unsubscribeForeground();
     };
   }, [insets.bottom]);
+
+  const checkWhatsNew = async () => {
+    try {
+      const seen = await AsyncStorage.getItem(WHATS_NEW_KEY);
+      if (!seen) {
+        setShowWhatsNew(true);
+      }
+    } catch (error) {
+      console.error('Error checking whats new:', error);
+    }
+  };
+
+  const dismissWhatsNew = async () => {
+    setShowWhatsNew(false);
+    try {
+      await AsyncStorage.setItem(WHATS_NEW_KEY, 'true');
+    } catch (error) {
+      console.error('Error saving whats new state:', error);
+    }
+  };
 
   const initializeApp = async () => {
     const hasPermission = await initializeNotifications();
@@ -102,6 +130,7 @@ function AppContent(): React.JSX.Element {
       console.error('⚠️ Background refresh setup failed:', error);
     }
 
+    await checkWhatsNew();
     loadInitialData();
   };
 
@@ -272,7 +301,7 @@ function AppContent(): React.JSX.Element {
         />
         <PrayerTimesTable prayers={prayerData.prayers} nextPrayerName={currentNextPrayer?.name || null} />
         <ConfigInfo config={prayerData.apiConfig || null} />
-        <View style={{height: 140}} />
+        <View style={{height: 72}} />
       </ScrollView>
 
       <TouchableOpacity
@@ -292,6 +321,12 @@ function AppContent(): React.JSX.Element {
         visible={showMenu}
         onClose={() => setShowMenu(false)}
         onRefresh={handleRefresh}
+        onAthanSettings={() => setShowAthanSettings(true)}
+      />
+
+      <AthanSettingsModal
+        visible={showAthanSettings}
+        onClose={() => setShowAthanSettings(false)}
       />
 
       <AnnouncementsModal
@@ -301,6 +336,11 @@ function AppContent(): React.JSX.Element {
           calculateUnreadCount();
         }}
         announcements={prayerData.announcements}
+      />
+
+      <WhatsNewModal
+        visible={showWhatsNew}
+        onClose={dismissWhatsNew}
       />
     </SafeAreaView>
   );
@@ -319,7 +359,7 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {flex: 1},
   scrollView: {flex: 1},
-  scrollContent: {paddingBottom: 20},
+  scrollContent: {paddingBottom: 8},
   errorContainer: {flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20},
   errorText: {fontSize: 16, textAlign: 'center', marginBottom: 20},
   retryButton: {paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8},

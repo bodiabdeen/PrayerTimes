@@ -1,7 +1,6 @@
-# Disable New Architecture on iOS so the bridge registers RCTEventEmitter and
-# react-native-safe-area-context works without hacks. Native patches (see scripts/patch-react-native.js)
-# make the app use bridge + legacy RCTRootView when this is set.
 ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+# RN 0.83+ uses New Architecture by default — RCT_NEW_ARCH_ENABLED=0 is no longer supported.
+# See: https://reactnative.dev/docs/new-architecture-intro
 
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
@@ -22,12 +21,19 @@ target 'JICPrayerTimes' do
   # 👇 gRPC pods MUST be inside the target
   pod 'gRPC-Core', :modular_headers => true
   pod 'gRPC-C++', :modular_headers => true
+  # GoogleUtilities must be a module so Firebase can find it under use_frameworks! :static
+  pod 'GoogleUtilities', :modular_headers => true
 
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
+
+  target 'widgetExtension' do
+    inherit! :search_paths
+    # Widget uses only WidgetKit + SwiftUI — no additional pods needed
+  end
 
   post_install do |installer|
     react_native_post_install(
@@ -88,7 +94,7 @@ target 'JICPrayerTimes' do
       end
     end
 
-     # Force gRPC to generate module maps (FIX for missing gRPC-Core.modulemap)
+    # Force gRPC to generate module maps (FIX for missing gRPC-Core.modulemap)
     installer.pods_project.targets.each do |target|
       if target.name.include?('gRPC')
         target.build_configurations.each do |config|
@@ -104,6 +110,120 @@ target 'JICPrayerTimes' do
         target.build_configurations.each do |config|
           config.build_settings['CLANG_ENABLE_MODULES'] = 'NO'
         end
+      end
+    end
+
+    # FIX: Explicitly configure RCTSwiftUI to build as a proper Swift module.
+    # Must run before the broad DEFINES_MODULE=NO sweep below.
+    installer.pods_project.targets.each do |target|
+      if target.name == 'RCTSwiftUI'
+        target.build_configurations.each do |config|
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+          config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+          config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'NO'
+          config.build_settings['SWIFT_INSTALL_OBJC_HEADER'] = 'YES'
+        end
+      end
+    end
+
+    # FIX: RCTSwiftUIWrapper (ObjC) does @import RCTSwiftUI but CocoaPods doesn't
+    # automatically add RCTSwiftUI.framework to its search paths in RN 0.83.
+    # Manually inject $(BUILT_PRODUCTS_DIR) so the module can be resolved at compile time.
+    installer.pods_project.targets.each do |target|
+      if target.name == 'RCTSwiftUIWrapper'
+        target.build_configurations.each do |config|
+          existing = config.build_settings['FRAMEWORK_SEARCH_PATHS'] || ['$(inherited)']
+          existing = [existing] if existing.is_a?(String)
+          unless existing.include?('$(BUILT_PRODUCTS_DIR)')
+            existing << '$(BUILT_PRODUCTS_DIR)'
+          end
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] = existing
+        end
+      end
+    end
+
+    # Fix non-modular-include-in-framework-module errors.
+    # use_frameworks! :static makes every pod a framework module by default,
+    # which breaks C/ObjC pods that include non-modular headers.
+    #
+    # We set DEFINES_MODULE=NO broadly to suppress non-modular-include errors,
+    # but must exclude any pod that is itself imported as a module by another pod:
+    #   - RCTSwiftUI / RCTSwiftUIWrapper  — imported by React Native
+    #   - Firebase* / FirebaseCore*       — internal Firebase Swift modules
+    #   - Google*                         — GoogleUtilities etc used by Firebase
+    #   - gRPC*                           — already handled above, kept here for safety
+    def self.needs_module?(name)
+      name.include?('gRPC') ||
+      name.start_with?('Firebase') ||
+      name.start_with?('Google') ||
+      name == 'RCTSwiftUI' ||
+      name == 'RCTSwiftUIWrapper'
+    end
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+        unless needs_module?(target.name)
+          config.build_settings['DEFINES_MODULE'] = 'NO'
+        end
+      end
+    end
+
+    # Also fix generated projects (ReactCodegen, ReactAppDependencyProvider)
+    installer.generated_projects.each do |project|
+      project.targets.each do |target|
+        target.build_configurations.each do |config|
+          unless needs_module?(target.name)
+            config.build_settings['DEFINES_MODULE'] = 'NO'
+          end
+        end
+      end
+    end
+
+    # Fix widgetExtension deployment target — containerBackground & widget scene require iOS 17+
+    installer.aggregate_targets.each do |aggregate_target|
+      aggregate_target.user_project.native_targets.each do |target|
+        if target.name == 'widgetExtension'
+          target.build_configurations.each do |config|
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+          end
+          puts "Set widgetExtension IPHONEOS_DEPLOYMENT_TARGET to 17.0"
+        end
+      end
+    end
+
+    # Fix [RNFB] Core Configuration build cycle AND non-modular-include errors on main app targets.
+    # - CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES must also be set on user project
+    #   targets (AppDelegate.mm, main.m, RNWidgetModule.m, etc.), not just pod targets.
+    # - Clearing input_paths/output_paths on the RNFB script phase removes Xcode's dependency
+    #   tracking that causes "Cycle inside IOMPrayerTimes".
+    saved_projects = []
+    installer.aggregate_targets.each do |aggregate_target|
+      aggregate_target.user_project.native_targets.each do |target|
+
+        # Fix non-modular-include errors on main app target files
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+          config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+        end
+
+        phase = target.build_phases.find do |p|
+          p.respond_to?(:name) && p.name == '[CP-User] [RNFB] Core Configuration'
+        end
+        if phase
+          phase.input_paths = []
+          phase.output_paths = []
+          target.build_phases.delete(phase)
+          target.build_phases.push(phase)
+          puts "Moved [RNFB] Core Configuration to end of #{target.name} build phases"
+        end
+      end
+
+      # Save each user project only once (deduped to avoid redundant writes)
+      unless saved_projects.include?(aggregate_target.user_project)
+        aggregate_target.user_project.save
+        saved_projects << aggregate_target.user_project
       end
     end
   end

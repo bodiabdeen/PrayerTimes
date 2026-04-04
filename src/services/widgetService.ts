@@ -5,38 +5,25 @@ import { Prayer } from '../types';
 const { WidgetModule } = NativeModules;
 
 export const updateWidget = (prayers: Prayer[], nextPrayer: Prayer | null) => {
-  // Widget only works on Android
-  if (Platform.OS !== 'android') {
+  if (!WidgetModule) {
+    console.error('❌ Widget module not available');
     return;
   }
 
   try {
-    if (!WidgetModule) {
-      console.error('❌ Widget module not available');
-      return;
-    }
-
-    // WIDGET SHOWS: 5 main prayers + sunrise ONLY (all have APT from API)
-    // Special prayers have APT='--:--' so filtering by APT excludes them automatically
-    const mainPrayers = prayers.filter(p => {
-      const hasApt = p.apt && p.apt !== '--:--';
-      return hasApt;
-    });
-
-    console.log('📋 Main prayers for widget:', mainPrayers.map(p => p.name).join(', '));
+    // Filter prayers that have an actual time (exclude special/placeholder prayers)
+    const mainPrayers = prayers.filter(p => p.apt && p.apt !== '--:--');
 
     if (mainPrayers.length === 0) {
       console.error('❌ No main prayers to display');
       return;
     }
 
-    // Build data object with all main prayer times (APT, MAT, MIT)
+    // Build data object with all prayer times
     const widgetData: any = {};
-    
+
     mainPrayers.forEach(prayer => {
-      const prayerName = prayer.name.toLowerCase();
-      // Remove Arabic text from prayer name for the key
-      const cleanName = prayerName.split(' ')[0]; // "fajr الفجر" → "fajr"
+      const cleanName = prayer.name.toLowerCase().split(' ')[0]; // "fajr الفجر" → "fajr"
       widgetData[cleanName] = {
         apt: prayer.apt || '--:--',
         mat: prayer.mat || '--:--',
@@ -44,33 +31,22 @@ export const updateWidget = (prayers: Prayer[], nextPrayer: Prayer | null) => {
       };
     });
 
-    // Find NEXT PRAYER for countdown (exclude sunrise - it's not a prayer time)
+    // Determine current prayer for highlighting
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTime = currentHour * 60 + currentMinute;
+    const currentTime = now.getHours() * 60 + now.getMinutes();
 
-    // Prayers for countdown (exclude sunrise - name might be "Sunrise الشروق")
-    const prayersForCountdown = mainPrayers.filter(p => !p.name.toLowerCase().startsWith('sunrise'));
-    
-    if (prayersForCountdown.length === 0) {
-      console.error('❌ No prayers for countdown');
-      return;
-    }
-    
+    const prayersForCountdown = mainPrayers.filter(
+      p => !p.name.toLowerCase().startsWith('sunrise')
+    );
+
     let currentPrayerIndex = 0;
     let foundUpcoming = false;
-    
-    // Find first prayer that hasn't happened yet (using APT only)
+
     for (let i = 0; i < prayersForCountdown.length; i++) {
       const prayer = prayersForCountdown[i];
-      const timeToCheck = prayer.apt;
-      
-      if (timeToCheck && timeToCheck !== '--:--') {
-        const [hours, minutes] = timeToCheck.split(':').map(Number);
-        const prayerTime = hours * 60 + minutes;
-        
-        if (prayerTime > currentTime) {
+      if (prayer.apt && prayer.apt !== '--:--') {
+        const [hours, minutes] = prayer.apt.split(':').map(Number);
+        if (hours * 60 + minutes > currentTime) {
           currentPrayerIndex = i;
           foundUpcoming = true;
           break;
@@ -78,38 +54,19 @@ export const updateWidget = (prayers: Prayer[], nextPrayer: Prayer | null) => {
       }
     }
 
-    // If all prayers passed today, cycle back to first prayer (Fajr for tomorrow)
     if (!foundUpcoming) {
       currentPrayerIndex = 0;
     }
 
     const currentPrayer = prayersForCountdown[currentPrayerIndex];
-    
-    // For WIDGET display, find this prayer in the mainPrayers list (which includes sunrise)
-    // and show next 3 items from that list (cycling through mainPrayers which includes sunrise)
     const mainPrayerIndex = mainPrayers.findIndex(p => p.name === currentPrayer.name);
-    
-    if (mainPrayerIndex === -1) {
-      console.error('❌ Could not find current prayer in main prayers list');
-      return;
-    }
-    
-    const widgetCurrentPrayer = mainPrayers[mainPrayerIndex];
-    const widgetNext1Prayer = mainPrayers[(mainPrayerIndex + 1) % mainPrayers.length];
-    const widgetNext2Prayer = mainPrayers[(mainPrayerIndex + 2) % mainPrayers.length];
 
-    // Use clean names (without Arabic) for the prayer name keys
-    widgetData.currentPrayer = widgetCurrentPrayer.name.split(' ')[0];
-    widgetData.next1Prayer = widgetNext1Prayer.name.split(' ')[0];
-    widgetData.next2Prayer = widgetNext2Prayer.name.split(' ')[0];
-
-    console.log('📱 Widget Update:', {
-      countdown: `${currentPrayer.name} (for countdown)`,
-      widgetDisplay: `${widgetCurrentPrayer.name} → ${widgetNext1Prayer.name} → ${widgetNext2Prayer.name}`,
-    });
+    widgetData.currentPrayer = mainPrayers[mainPrayerIndex]?.name.split(' ')[0] ?? '';
+    widgetData.next1Prayer   = mainPrayers[(mainPrayerIndex + 1) % mainPrayers.length]?.name.split(' ')[0] ?? '';
+    widgetData.next2Prayer   = mainPrayers[(mainPrayerIndex + 2) % mainPrayers.length]?.name.split(' ')[0] ?? '';
 
     WidgetModule.updateWidget(widgetData);
-    console.log('✅ Widget updated');
+    console.log('✅ Widget updated (' + Platform.OS + ')');
   } catch (error) {
     console.error('❌ Error updating widget:', error);
   }

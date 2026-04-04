@@ -1,3 +1,5 @@
+// src/components/MenuModal.tsx
+
 import React, {useState, useEffect} from 'react';
 import {
   Modal,
@@ -15,6 +17,7 @@ interface MenuModalProps {
   visible: boolean;
   onClose: () => void;
   onRefresh: () => void;
+  onAthanSettings: () => void; // lifted up — caller opens AthanSettingsModal
 }
 
 interface MenuLink {
@@ -28,6 +31,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   visible,
   onClose,
   onRefresh,
+  onAthanSettings,
 }) => {
   const {isDark, toggleTheme, theme, timeFormat, toggleTimeFormat} = useTheme();
   const [menuLinks, setMenuLinks] = useState<MenuLink[]>([]);
@@ -59,18 +63,20 @@ export const MenuModal: React.FC<MenuModalProps> = ({
         style={styles.overlay}
         activeOpacity={1}
         onPress={onClose}>
-        <View style={[styles.menu, {backgroundColor: theme.cardBackground}]} onStartShouldSetResponder={() => true}>
+        <View
+          style={[styles.menu, {backgroundColor: theme.cardBackground}]}
+          onStartShouldSetResponder={() => true}>
           <ScrollView style={styles.scrollView}>
+
             {/* Settings Section */}
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, {color: theme.textSecondary}]}>SETTINGS</Text>
-              
+              <Text style={[styles.sectionTitle, {color: theme.textSecondary}]}>
+                SETTINGS
+              </Text>
+
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  toggleTheme();
-                  onClose();
-                }}>
+                onPress={() => { toggleTheme(); onClose(); }}>
                 <Text style={styles.icon}>{isDark ? '🌙' : '☀️'}</Text>
                 <Text style={[styles.menuText, {color: theme.text}]}>
                   {isDark ? 'Dark Mode' : 'Light Mode'}
@@ -79,13 +85,22 @@ export const MenuModal: React.FC<MenuModalProps> = ({
 
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  toggleTimeFormat();
-                  onClose();
-                }}>
+                onPress={() => { toggleTimeFormat(); onClose(); }}>
                 <Text style={styles.icon}>🕐</Text>
                 <Text style={[styles.menuText, {color: theme.text}]}>
                   {timeFormat === '24h' ? '24 Hour Format' : '12 Hour Format'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => {
+                  onClose();                  // close MenuModal first
+                  setTimeout(onAthanSettings, 400); // then open AthanSettingsModal after animation finishes
+                }}>
+                <Text style={styles.icon}>🔊</Text>
+                <Text style={[styles.menuText, {color: theme.text}]}>
+                  Athan Settings
                 </Text>
               </TouchableOpacity>
             </View>
@@ -93,9 +108,10 @@ export const MenuModal: React.FC<MenuModalProps> = ({
             {/* Links Section */}
             {menuLinks.length > 0 && (
               <View style={[styles.section, styles.linksSection]}>
-                <Text style={[styles.sectionTitle, {color: theme.textSecondary}]}>LINKS</Text>
-                
-                {menuLinks.map((link) => (
+                <Text style={[styles.sectionTitle, {color: theme.textSecondary}]}>
+                  LINKS
+                </Text>
+                {menuLinks.map(link => (
                   <TouchableOpacity
                     key={link.id}
                     style={styles.menuItem}
@@ -142,45 +158,16 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 40,
   },
-  section: {
-    marginBottom: 24,
-  },
+  section: {marginBottom: 24},
   linksSection: {
     borderTopWidth: 1,
     borderTopColor: 'rgba(128, 128, 128, 0.2)',
     paddingTop: 16,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 12,
-    letterSpacing: 1,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    flexWrap: 'wrap',
-  },
-  icon: {
-    fontSize: 22,
-    marginRight: 16,
-    width: 28,
-  },
-  menuText: {
-    fontSize: 16,
-    fontWeight: '500',
-    flex: 1,
-  },
-  closeButton: {
-    marginTop: 8,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  sectionTitle: {fontSize: 12, fontWeight: '600', marginBottom: 12, letterSpacing: 1},
+  menuItem: {flexDirection: 'row', alignItems: 'center', paddingVertical: 12, flexWrap: 'wrap'},
+  icon: {fontSize: 22, marginRight: 16, width: 28},
+  menuText: {fontSize: 16, fontWeight: '500', flex: 1},
+  closeButton: {marginTop: 8, padding: 16, borderRadius: 12, alignItems: 'center'},
+  closeButtonText: {color: '#FFFFFF', fontSize: 16, fontWeight: '600'},
 });

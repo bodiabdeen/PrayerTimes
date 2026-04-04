@@ -63,6 +63,9 @@ android {
         versionName "1.0"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", (findProperty("newArchEnabled") ?: "true").toBoolean().toString()
         buildConfigField "boolean", "IS_HERMES_ENABLED", "(findProperty('hermesEnabled') ?: 'true').toBoolean()"
+        ndk {
+            abiFilters "arm64-v8a", "x86_64"
+        }
     }
     
     signingConfigs {

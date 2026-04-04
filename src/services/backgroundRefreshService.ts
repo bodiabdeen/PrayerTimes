@@ -227,7 +227,7 @@ export const scheduleTestBackgroundFetch = async (): Promise<void> => {
   try {
     console.log('🧪 [BackgroundFetch] Scheduling TEST task...');
     await BackgroundFetch.scheduleTask({
-      taskId: 'com.jicprayertimes.test',
+      taskId: 'com.iomprayertimes.test',
       delay: 10000, // 10 seconds delay (in milliseconds)
       periodic: false,
       forceAlarmManager: true,

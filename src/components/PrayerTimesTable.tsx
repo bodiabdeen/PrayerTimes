@@ -24,7 +24,6 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
     jumaa: {en: "Jumu'ah Prayer", ar: 'صلاة الجمعة'},
   };
 
-  // CHANGE #2: Updated Arabic text for "Prayer Start"
   const columnHeaders = [
     {en: 'Prayer Start', ar: 'دخول وقت الصلاة'},
     {en: 'Masjid Adhan', ar: 'أذان المسجد'},
@@ -58,7 +57,6 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
               </Text>
             </View>
 
-            {/* Special prayers (Taraweeh, Eid) show only one time */}
             {prayer.isSpecial ? (
               <View style={styles.specialPrayerTime}>
                 <Text style={[styles.specialTimeLabel, {color: theme.textSecondary}]}>
@@ -132,25 +130,26 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    gap: 12,
+    paddingHorizontal: 10,
+    gap: 4,
   },
   prayerCard: {
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    padding: 16,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   nextPrayerCard: {
     borderWidth: 2,
-    shadowOpacity: 0.15,
-    elevation: 3,
+    shadowOpacity: 0.12,
+    elevation: 2,
   },
   prayerHeader: {
-    marginBottom: 12,
+    marginBottom: 4,
   },
   prayerName: {
     fontSize: 18,
@@ -158,7 +157,7 @@ const styles = StyleSheet.create({
   },
   prayerNameArabic: {
     fontSize: 14,
-    marginTop: 2,
+    marginTop: 0,
   },
   timesRow: {
     flexDirection: 'row',
@@ -174,8 +173,8 @@ const styles = StyleSheet.create({
   },
   columnHeaderArabic: {
     fontSize: 10,
-    marginTop: 2,
-    marginBottom: 8,
+    marginTop: 0,
+    marginBottom: 2,
   },
   time: {
     fontSize: 16,
@@ -183,12 +182,12 @@ const styles = StyleSheet.create({
   },
   specialPrayerTime: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 2,
   },
   specialTimeLabel: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 2,
   },
   specialTime: {
     fontSize: 24,
