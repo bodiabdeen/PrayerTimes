@@ -77,11 +77,15 @@ struct PrayerColumn: View {
     let mit: String?
     let isCurrent: Bool
 
+    var nameColor: Color {
+        isCurrent ? Color(red: 0.792, green: 0.647, blue: 0.369) : .white
+    }
+
     var body: some View {
         VStack(spacing: 1) {
             Text(name)
                 .font(.system(size: 10, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(nameColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(apt)
@@ -98,7 +102,7 @@ struct PrayerColumn: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(isCurrent ? Color(red: 0, green: 0.87, blue: 0.52).opacity(0.3) : Color.white.opacity(0.08))
+        .background(isCurrent ? Color(red: 0.792, green: 0.647, blue: 0.369).opacity(0.3) : Color.white.opacity(0.08))
         .cornerRadius(4)
     }
 }
@@ -124,8 +128,9 @@ struct PrayerTimesWidgetView: View {
         .padding(4)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(for: .widget) {
+            // Brand primary: #0D2B4E (navy), shading to a slightly lighter navy
             LinearGradient(
-                colors: [Color(red: 0.05, green: 0.1, blue: 0.2), Color(red: 0.1, green: 0.15, blue: 0.3)],
+                colors: [Color(red: 0.051, green: 0.169, blue: 0.306), Color(red: 0.071, green: 0.212, blue: 0.376)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
