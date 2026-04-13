@@ -22,7 +22,7 @@ struct WidgetData: Codable {
 // MARK: - Timeline Provider
 
 struct Provider: TimelineProvider {
-    let appGroupID = "group.com.iomprayertimes.widget"
+    let appGroupID = "group.com.jicprayertimes.widget"
 
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), widgetData: sampleData())

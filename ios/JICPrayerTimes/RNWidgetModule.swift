@@ -4,7 +4,7 @@ import WidgetKit
 @objc(WidgetModule)
 class WidgetModule: NSObject {
 
-    let appGroupID = "group.com.iomprayertimes.widget"
+    let appGroupID = "group.com.jicprayertimes.widget"
 
     @objc
     func updateWidget(_ prayerData: NSDictionary) {

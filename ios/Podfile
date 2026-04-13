@@ -197,7 +197,7 @@ target 'JICPrayerTimes' do
     # - CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES must also be set on user project
     #   targets (AppDelegate.mm, main.m, RNWidgetModule.m, etc.), not just pod targets.
     # - Clearing input_paths/output_paths on the RNFB script phase removes Xcode's dependency
-    #   tracking that causes "Cycle inside IOMPrayerTimes".
+    #   tracking that causes "Cycle inside JICPrayerTimes".
     saved_projects = []
     installer.aggregate_targets.each do |aggregate_target|
       aggregate_target.user_project.native_targets.each do |target|

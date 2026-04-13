@@ -3,11 +3,8 @@
 //  JICPrayerTimes
 //
 
-#ifndef JICPrayerTimes_Bridging_Header_h
-#define JICPrayerTimes_Bridging_Header_h
 
-#import <React/RCTAppDelegate.h>
-#import <React/RCTBundleURLProvider.h>
-#import <React/RCTBridge.h>
+#import <React/RCTBridgeModule.h>
+#import <React/RCTViewManager.h>
+#import <React/RCTEventEmitter.h>
 
-#endif /* JICPrayerTimes_Bridging_Header_h */
