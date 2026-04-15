@@ -129,8 +129,8 @@ function AppContent(): React.JSX.Element {
     } catch (error) {
       console.error('⚠️ Background refresh setup failed:', error);
     }
-
-    await checkWhatsNew();
+// uncomment below to enable whatsNew
+//    await checkWhatsNew();
     loadInitialData();
   };
 
@@ -336,11 +336,6 @@ function AppContent(): React.JSX.Element {
           calculateUnreadCount();
         }}
         announcements={prayerData.announcements}
-      />
-
-      <WhatsNewModal
-        visible={showWhatsNew}
-        onClose={dismissWhatsNew}
       />
     </SafeAreaView>
   );
