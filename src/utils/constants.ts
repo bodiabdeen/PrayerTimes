@@ -1,11 +1,14 @@
 export const FIREBASE_CONFIG = {
   COLLECTION: 'prayerTimes',
   DOCUMENTS: {
-    API_CONFIG: 'apiConfig',
-    DAILY_CONFIG: 'dailyConfig',
-    ANNOUNCEMENTS: 'announcements',
-    FALLBACK_RULES: 'fallbackRules',
-    MENU_LINKS: 'menuLinks',
+    API_CONFIG:      'apiConfig',
+    DAILY_CONFIG:    'dailyConfig',
+    ANNOUNCEMENTS:   'announcements',
+    FALLBACK_RULES:  'fallbackRules',
+    MENU_LINKS:      'menuLinks',
+    // ★ NEW — per-date MAT/MIT overrides, read by new app only.
+    //   Old installed app never reads this document — zero impact on live users.
+    SCHEDULED_TIMES: 'scheduledTimes',
   },
 };
 
@@ -26,14 +29,14 @@ export const UPDATE_INTERVAL = {
 };
 
 export const PRAYER_NAMES = {
-  fajr: { en: 'Fajr الفجر', ar: 'الفجر' },
-  sunrise: { en: 'Sunrise الشروق', ar: 'الشروق' },
-  dhuhr: { en: 'Dhuhr الظهر', ar: 'الظهر' },
-  asr: { en: 'Asr العصر', ar: 'العصر' },
-  maghrib: { en: 'Maghrib المغرب', ar: 'المغرب' },
-  isha: { en: 'Isha العشاء', ar: 'العشاء' },
-  jumaa: { en: "Jumu'ah الجمعة", ar: 'الجمعة' },
-  taraweeh: { en: 'Taraweeh التراويح', ar: 'التراويح' },
-  eidFitr: { en: 'Eid al-Fitr عيد الفطر', ar: 'عيد الفطر' },
-  eidAdha: { en: 'Eid al-Adha عيد الأضحى', ar: 'عيد الأضحى' },
+  fajr:     { en: 'Fajr الفجر',           ar: 'الفجر' },
+  sunrise:  { en: 'Sunrise الشروق',        ar: 'الشروق' },
+  dhuhr:    { en: 'Dhuhr الظهر',           ar: 'الظهر' },
+  asr:      { en: 'Asr العصر',             ar: 'العصر' },
+  maghrib:  { en: 'Maghrib المغرب',         ar: 'المغرب' },
+  isha:     { en: 'Isha العشاء',            ar: 'العشاء' },
+  jumaa:    { en: "Jumu'ah الجمعة",         ar: 'الجمعة' },
+  taraweeh: { en: 'Taraweeh التراويح',      ar: 'التراويح' },
+  eidFitr:  { en: 'Eid al-Fitr عيد الفطر', ar: 'عيد الفطر' },
+  eidAdha:  { en: 'Eid al-Adha عيد الأضحى', ar: 'عيد الأضحى' },
 };

@@ -1,5 +1,14 @@
 // src/services/firebaseService.ts
 // Firebase Firestore integration service (modular API for v22+)
+//
+// MAT / MIT PRIORITY CHAIN (highest → lowest):
+//   ① scheduledTimes[today][prayer]  — per-date advance override (new app only)
+//   ② dailyConfig.dailyPrayers[prayer] — default manual times (old + new app)
+//   ③ APT + fallbackRules[prayer].matOffset / mitOffset — auto calc (old + new app)
+//
+// The old installed app never reads "scheduledTimes" — it only reads
+// "dailyConfig", "apiConfig", "fallbackRules", "announcements", "menuLinks".
+// Publishing this update therefore has ZERO impact on currently installed devices.
 
 import {
   getFirestore,
@@ -27,8 +36,8 @@ export type MenuLink = {
 
 // Per-prayer fallback offsets fetched from Firebase fallbackRules document
 type PrayerFallbackRule = {
-  matOffset: number; // Minutes to add to APT when MAT is empty
-  mitOffset: number; // Minutes to add to MAT when MIT is empty
+  matOffset: number; // Minutes to add to APT when MAT is still empty after all checks
+  mitOffset: number; // Minutes to add to MAT when MIT is still empty after all checks
 };
 
 type FallbackRules = {
@@ -39,7 +48,16 @@ type FallbackRules = {
   isha: PrayerFallbackRule;
 };
 
-// Safe defaults if fallbackRules document is missing
+// Per-prayer scheduled values for a specific date
+type ScheduledPrayerTimes = {
+  fajr:    { mat: string; mit: string };
+  dhuhr:   { mat: string; mit: string };
+  asr:     { mat: string; mit: string };
+  maghrib: { mat: string; mit: string };
+  isha:    { mat: string; mit: string };
+};
+
+// Safe defaults used if fallbackRules document is missing
 const DEFAULT_FALLBACK_RULES: FallbackRules = {
   fajr:    { matOffset: 0, mitOffset: 5 },
   dhuhr:   { matOffset: 0, mitOffset: 5 },
@@ -49,8 +67,23 @@ const DEFAULT_FALLBACK_RULES: FallbackRules = {
 };
 
 /**
- * Initialize Firebase (must be called before any Firestore operations)
+ * Returns today's date key in YYYY-MM-DD format using local device time.
  */
+const getTodayKey = (): string => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/**
+ * Returns true only if a time string is a valid, non-empty, non-zero time.
+ */
+const isValidTime = (t: string | undefined | null): boolean => {
+  return !!t && t !== '' && t !== '00:00';
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// Initialize Firebase
+// ─────────────────────────────────────────────────────────────────────────
 export const initializeFirebase = async (): Promise<void> => {
   try {
     const apps = getApps();
@@ -58,7 +91,6 @@ export const initializeFirebase = async (): Promise<void> => {
       console.log('✅ Firebase already initialized');
       return;
     }
-    // Firebase will auto-initialize from google-services.json
     console.log('✅ Firebase initialized successfully');
   } catch (error) {
     console.error('❌ Firebase initialization failed:', error);
@@ -66,38 +98,37 @@ export const initializeFirebase = async (): Promise<void> => {
   }
 };
 
-/**
- * Fetch API configuration from Firebase
- */
+// ─────────────────────────────────────────────────────────────────────────
+// Fetch API config  (prayerTimes/apiConfig)
+// ✅ Used by: old app + new app
+// ─────────────────────────────────────────────────────────────────────────
 export const fetchApiConfig = async (): Promise<ApiConfig | null> => {
   try {
     const db = getFirestore();
-    const docRef = doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.API_CONFIG);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.API_CONFIG));
 
     if (!docSnap.exists) {
       console.error('❌ API config document not found');
       return null;
     }
 
-    const rawData = docSnap.data();
-
+    const r = docSnap.data();
     const data: ApiConfig = {
-      method: rawData?.method || 4,
-      latitude: rawData?.latitude || 54.15,
-      longitude: rawData?.longitude || -4.48,
-      timezone: 'Europe/Jersey',
+      method:    r?.method    || 4,
+      latitude:  r?.latitude  || 54.15,
+      longitude: r?.longitude || -4.48,
+      timezone:  'Europe/Jersey',
       offsetMinutes: {
-        fajr:    rawData?.offsets?.fajr    || 0,
-        dhuhr:   rawData?.offsets?.dhuhr   || 0,
-        asr:     rawData?.offsets?.asr     || 0,
-        maghrib: rawData?.offsets?.maghrib || 0,
-        isha:    rawData?.offsets?.isha    || 0,
-        school:  rawData?.offsets?.school  || 0,
-      }
+        fajr:    r?.offsets?.fajr    || 0,
+        dhuhr:   r?.offsets?.dhuhr   || 0,
+        asr:     r?.offsets?.asr     || 0,
+        maghrib: r?.offsets?.maghrib || 0,
+        isha:    r?.offsets?.isha    || 0,
+        school:  r?.offsets?.school  || 0,
+      },
     };
 
-    console.log('✅ API config fetched from Firebase');
+    console.log('✅ API config fetched');
     return data;
   } catch (error) {
     console.error('❌ Error fetching API config:', error);
@@ -105,24 +136,21 @@ export const fetchApiConfig = async (): Promise<ApiConfig | null> => {
   }
 };
 
-/**
- * Fetch fallback rules from Firebase.
- * These define how many minutes to offset APT→MAT and MAT→MIT
- * when the mosque hasn't set those times in dailyConfig.
- */
+// ─────────────────────────────────────────────────────────────────────────
+// Fetch fallback rules  (prayerTimes/fallbackRules)
+// ✅ Used by: old app + new app
+// ─────────────────────────────────────────────────────────────────────────
 export const fetchFallbackRules = async (): Promise<FallbackRules> => {
   try {
     const db = getFirestore();
-    const docRef = doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.FALLBACK_RULES);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.FALLBACK_RULES));
 
     if (!docSnap.exists) {
-      console.warn('⚠️ fallbackRules document not found, using defaults');
+      console.warn('⚠️ fallbackRules not found, using defaults');
       return DEFAULT_FALLBACK_RULES;
     }
 
     const r = docSnap.data();
-
     const rules: FallbackRules = {
       fajr:    { matOffset: r?.fajr?.matOffset    ?? 0, mitOffset: r?.fajr?.mitOffset    ?? 5 },
       dhuhr:   { matOffset: r?.dhuhr?.matOffset   ?? 0, mitOffset: r?.dhuhr?.mitOffset   ?? 5 },
@@ -131,7 +159,7 @@ export const fetchFallbackRules = async (): Promise<FallbackRules> => {
       isha:    { matOffset: r?.isha?.matOffset    ?? 0, mitOffset: r?.isha?.mitOffset    ?? 5 },
     };
 
-    console.log('✅ Fallback rules fetched from Firebase');
+    console.log('✅ Fallback rules fetched');
     return rules;
   } catch (error) {
     console.error('❌ Error fetching fallback rules, using defaults:', error);
@@ -139,14 +167,14 @@ export const fetchFallbackRules = async (): Promise<FallbackRules> => {
   }
 };
 
-/**
- * Fetch daily configuration from Firebase
- */
+// ─────────────────────────────────────────────────────────────────────────
+// Fetch daily config  (prayerTimes/dailyConfig)
+// ✅ Used by: old app + new app
+// ─────────────────────────────────────────────────────────────────────────
 export const fetchDailyConfig = async (): Promise<DailyConfig | null> => {
   try {
     const db = getFirestore();
-    const docRef = doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.DAILY_CONFIG);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.DAILY_CONFIG));
 
     if (!docSnap.exists) {
       console.error('❌ Daily config document not found');
@@ -160,22 +188,22 @@ export const fetchDailyConfig = async (): Promise<DailyConfig | null> => {
       return null;
     }
 
-    const dailyPrayers = rawData.dailyPrayers;
+    const dp = rawData.dailyPrayers;
 
     const data: DailyConfig = {
       mat: {
-        fajr:    dailyPrayers?.fajr?.mat    || '00:00',
-        dhuhr:   dailyPrayers?.dhuhr?.mat   || '00:00',
-        asr:     dailyPrayers?.asr?.mat     || '00:00',
-        maghrib: dailyPrayers?.maghrib?.mat || '00:00',
-        isha:    dailyPrayers?.isha?.mat    || '00:00',
+        fajr:    dp?.fajr?.mat    || '00:00',
+        dhuhr:   dp?.dhuhr?.mat   || '00:00',
+        asr:     dp?.asr?.mat     || '00:00',
+        maghrib: dp?.maghrib?.mat || '00:00',
+        isha:    dp?.isha?.mat    || '00:00',
       },
       mit: {
-        fajr:    dailyPrayers?.fajr?.mit    || '00:00',
-        dhuhr:   dailyPrayers?.dhuhr?.mit   || '00:00',
-        asr:     dailyPrayers?.asr?.mit     || '00:00',
-        maghrib: dailyPrayers?.maghrib?.mit || '00:00',
-        isha:    dailyPrayers?.isha?.mit    || '00:00',
+        fajr:    dp?.fajr?.mit    || '00:00',
+        dhuhr:   dp?.dhuhr?.mit   || '00:00',
+        asr:     dp?.asr?.mit     || '00:00',
+        maghrib: dp?.maghrib?.mit || '00:00',
+        isha:    dp?.isha?.mit    || '00:00',
       },
       specialPrayers: {
         jumaa: rawData.jumaa ? {
@@ -193,10 +221,10 @@ export const fetchDailyConfig = async (): Promise<DailyConfig | null> => {
           prayer1: rawData.eid.fitr.prayer1 || { time: '' },
           prayer2: rawData.eid.fitr.prayer2 || { time: '' },
         } : undefined,
-      }
+      },
     };
 
-    console.log('✅ Daily config fetched from Firebase');
+    console.log('✅ Daily config fetched');
     return data;
   } catch (error) {
     console.error('❌ Error fetching daily config:', error);
@@ -204,19 +232,50 @@ export const fetchDailyConfig = async (): Promise<DailyConfig | null> => {
   }
 };
 
-/**
- * Fetch menu links from Firebase
- */
+// ─────────────────────────────────────────────────────────────────────────
+// Fetch scheduled times for today  (prayerTimes/scheduledTimes)
+// ★ Used by: new app ONLY
+//   The old installed app never calls this function and never reads this
+//   Firestore document. Publishing the new app does not affect live users.
+// ─────────────────────────────────────────────────────────────────────────
+export const fetchScheduledTimesForToday = async (): Promise<ScheduledPrayerTimes | null> => {
+  try {
+    const db = getFirestore();
+    const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.SCHEDULED_TIMES));
+
+    if (!docSnap.exists) {
+      console.log('📅 No scheduledTimes document — using daily config');
+      return null;
+    }
+
+    const all = docSnap.data();
+    const todayKey = getTodayKey();
+    const todayEntry = all?.[todayKey];
+
+    if (!todayEntry) {
+      console.log(`📅 No scheduled entry for today (${todayKey}) — using daily config`);
+      return null;
+    }
+
+    console.log(`✅ Scheduled times found for today (${todayKey})`);
+    return todayEntry as ScheduledPrayerTimes;
+  } catch (error) {
+    // Non-fatal: if this fails, the app falls back gracefully to dailyConfig
+    console.error('❌ Error fetching scheduled times (falling back to daily config):', error);
+    return null;
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// Fetch menu links  (prayerTimes/menuLinks)
+// ✅ Used by: old app + new app
+// ─────────────────────────────────────────────────────────────────────────
 export const fetchMenuLinks = async (): Promise<MenuLink[] | null> => {
   try {
     const db = getFirestore();
-    const docRef = doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.MENU_LINKS);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.MENU_LINKS));
 
-    if (!docSnap.exists) {
-      console.log('📭 No menuLinks document found');
-      return [];
-    }
+    if (!docSnap.exists) return [];
 
     const rawData = docSnap.data();
     const links: MenuLink[] = (rawData?.links || []).map((link: any) => ({
@@ -226,7 +285,7 @@ export const fetchMenuLinks = async (): Promise<MenuLink[] | null> => {
       icon: link.icon,
     }));
 
-    console.log('✅ Menu links fetched from Firebase');
+    console.log('✅ Menu links fetched');
     return links;
   } catch (error) {
     console.error('❌ Error fetching menu links:', error);
@@ -234,43 +293,37 @@ export const fetchMenuLinks = async (): Promise<MenuLink[] | null> => {
   }
 };
 
-/**
- * Fetch announcements from Firebase
- */
+// ─────────────────────────────────────────────────────────────────────────
+// Fetch announcements  (prayerTimes/announcements)
+// ✅ Used by: old app + new app
+// ─────────────────────────────────────────────────────────────────────────
 export const fetchAnnouncements = async (): Promise<AnnouncementsData | null> => {
   try {
     const db = getFirestore();
-    const docRef = doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.ANNOUNCEMENTS);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.ANNOUNCEMENTS));
 
-    if (!docSnap.exists) {
-      console.log('📭 No announcements document found');
-      return { list: [], lastUpdated: null };
-    }
+    if (!docSnap.exists) return { list: [], lastUpdated: null };
 
-    const data = docSnap.data() as AnnouncementsData;
-    console.log('✅ Announcements fetched from Firebase');
-    return data;
+    console.log('✅ Announcements fetched');
+    return docSnap.data() as AnnouncementsData;
   } catch (error) {
     console.error('❌ Error fetching announcements:', error);
     return { list: [], lastUpdated: null };
   }
 };
 
-/**
- * Combine data from all sources into one object
- */
+// ─────────────────────────────────────────────────────────────────────────
+// Combine all data — main entry point called by the app
+// ─────────────────────────────────────────────────────────────────────────
 export const fetchAllPrayerData = async (): Promise<CombinedPrayerData | null> => {
   try {
     console.log('🔄 Starting data fetch...');
 
-    // Step 1: Fetch API config
+    // 1. API config
     const apiConfig = await fetchApiConfig();
-    if (!apiConfig) {
-      throw new Error('Failed to fetch API config');
-    }
+    if (!apiConfig) throw new Error('Failed to fetch API config');
 
-    // Step 2: Fetch prayer times from Aladhan
+    // 2. Aladhan prayer times (APT)
     const today = new Date();
     const aladhanData = await fetchPrayerTimesFromAladhan(
       today,
@@ -278,172 +331,133 @@ export const fetchAllPrayerData = async (): Promise<CombinedPrayerData | null> =
       apiConfig.latitude,
       apiConfig.longitude
     );
+    if (!aladhanData) throw new Error('Failed to fetch prayer times from Aladhan');
 
-    if (!aladhanData) {
-      throw new Error('Failed to fetch prayer times from Aladhan');
-    }
-
-    // Convert Aladhan timings and apply APT offsets
     const aptTimings = convertAladhanTimings(aladhanData.timings);
-    const aptWithOffsets = {
+    const apt = {
       fajr:    applyTimeOffset(aptTimings.fajr,    apiConfig.offsetMinutes.fajr),
-      sunrise: aptTimings.sunrise, // No offset for sunrise
+      sunrise: aptTimings.sunrise,
       dhuhr:   applyTimeOffset(aptTimings.dhuhr,   apiConfig.offsetMinutes.dhuhr),
       asr:     applyTimeOffset(aptTimings.asr,     apiConfig.offsetMinutes.asr),
       maghrib: applyTimeOffset(aptTimings.maghrib, apiConfig.offsetMinutes.maghrib),
       isha:    applyTimeOffset(aptTimings.isha,    apiConfig.offsetMinutes.isha),
     };
 
-    // Step 3: Fetch daily config (MAT/MIT times)
+    // 3. Daily config (② priority)
     const dailyConfig = await fetchDailyConfig();
-    if (!dailyConfig) {
-      throw new Error('Failed to fetch daily config');
-    }
+    if (!dailyConfig) throw new Error('Failed to fetch daily config');
 
-    // Step 4: Fetch fallback rules from Firebase
+    // 4. Scheduled times for today (① priority — new app only)
+    //    Returns null if no entry exists for today, which is the common case.
+    //    Failure here is non-fatal and silently falls back to dailyConfig.
+    const scheduled = await fetchScheduledTimesForToday();
+
+    // 5. Fallback rules (③ priority)
     const fallbackRules = await fetchFallbackRules();
 
-    // Step 5: Fetch announcements
+    // 6. Announcements
     const announcementsData = await fetchAnnouncements() || { list: [], lastUpdated: null };
-    const announcementsList = announcementsData.list || [];
 
-    // Step 6: Build prayers array using Firebase-driven fallback rules
+    // ── Resolve MAT/MIT for each prayer ──────────────────────────────────
     //
-    // Fallback cascade:
-    //   MAT empty? → MAT = APT + fallbackRules[prayer].matOffset
-    //   MIT empty? → MIT = finalMAT + fallbackRules[prayer].mitOffset
+    //  Priority:
+    //    ① scheduled[prayer].mat/mit  (non-empty)
+    //    ② dailyConfig.mat/mit[prayer] (non-empty)
+    //    ③ APT + fallbackRules[prayer].matOffset / mitOffset
     //
     const buildPrayer = (
-      prayerName: string,
-      apt: string,
-      mat: string,
-      mit: string,
+      prayerKey: string,
+      aptTime: string,
+      dailyMat: string,
+      dailyMit: string,
+      schedMat: string | undefined,
+      schedMit: string | undefined,
       rules: PrayerFallbackRule,
-    ) => {
-      const isMatEmpty = !mat || mat === '00:00';
-      const finalMat = isMatEmpty ? applyTimeOffset(apt, rules.matOffset) : mat;
+    ): Prayer => {
+      // Resolve MAT: scheduled first, then daily, then APT+offset
+      const resolvedMat = isValidTime(schedMat)  ? schedMat!
+                        : isValidTime(dailyMat)   ? dailyMat
+                        : applyTimeOffset(aptTime, rules.matOffset);
 
-      const isMitEmpty = !mit || mit === '00:00';
-      const finalMit = isMitEmpty ? applyTimeOffset(finalMat, rules.mitOffset) : mit;
+      // Resolve MIT: scheduled first, then daily, then resolvedMAT+offset
+      const resolvedMit = isValidTime(schedMit)  ? schedMit!
+                        : isValidTime(dailyMit)   ? dailyMit
+                        : applyTimeOffset(resolvedMat, rules.mitOffset);
 
       return {
-        name: PRAYER_NAMES[prayerName as keyof typeof PRAYER_NAMES].en,
-        nameArabic: PRAYER_NAMES[prayerName as keyof typeof PRAYER_NAMES].ar,
-        apt,
-        mat: finalMat,
-        mit: finalMit,
-        isNext: false,
+        name:       PRAYER_NAMES[prayerKey as keyof typeof PRAYER_NAMES].en,
+        nameArabic: PRAYER_NAMES[prayerKey as keyof typeof PRAYER_NAMES].ar,
+        apt:        aptTime,
+        mat:        resolvedMat,
+        mit:        resolvedMit,
+        isNext:     false,
       };
     };
 
     const prayers: Prayer[] = [
-      buildPrayer('fajr',    aptWithOffsets.fajr,    dailyConfig.mat.fajr,    dailyConfig.mit.fajr,    fallbackRules.fajr),
+      buildPrayer('fajr',    apt.fajr,    dailyConfig.mat.fajr,    dailyConfig.mit.fajr,    scheduled?.fajr?.mat,    scheduled?.fajr?.mit,    fallbackRules.fajr),
       {
         name: PRAYER_NAMES.sunrise.en,
         nameArabic: PRAYER_NAMES.sunrise.ar,
-        apt: aptWithOffsets.sunrise,
-        mat: '--:--',
-        mit: '--:--',
-        isNext: false,
+        apt: apt.sunrise, mat: '--:--', mit: '--:--', isNext: false,
       },
-      buildPrayer('dhuhr',   aptWithOffsets.dhuhr,   dailyConfig.mat.dhuhr,   dailyConfig.mit.dhuhr,   fallbackRules.dhuhr),
-      buildPrayer('asr',     aptWithOffsets.asr,     dailyConfig.mat.asr,     dailyConfig.mit.asr,     fallbackRules.asr),
-      buildPrayer('maghrib', aptWithOffsets.maghrib, dailyConfig.mat.maghrib, dailyConfig.mit.maghrib, fallbackRules.maghrib),
-      buildPrayer('isha',    aptWithOffsets.isha,    dailyConfig.mat.isha,    dailyConfig.mit.isha,    fallbackRules.isha),
+      buildPrayer('dhuhr',   apt.dhuhr,   dailyConfig.mat.dhuhr,   dailyConfig.mit.dhuhr,   scheduled?.dhuhr?.mat,   scheduled?.dhuhr?.mit,   fallbackRules.dhuhr),
+      buildPrayer('asr',     apt.asr,     dailyConfig.mat.asr,     dailyConfig.mit.asr,     scheduled?.asr?.mat,     scheduled?.asr?.mit,     fallbackRules.asr),
+      buildPrayer('maghrib', apt.maghrib, dailyConfig.mat.maghrib, dailyConfig.mit.maghrib, scheduled?.maghrib?.mat, scheduled?.maghrib?.mit, fallbackRules.maghrib),
+      buildPrayer('isha',    apt.isha,    dailyConfig.mat.isha,    dailyConfig.mit.isha,    scheduled?.isha?.mat,    scheduled?.isha?.mit,    fallbackRules.isha),
     ];
 
-    // Add Jumaa prayer (Friday prayer - after Dhuhr)
+    // Special prayers (not affected by scheduled times — use dailyConfig as before)
     if (dailyConfig.specialPrayers.jumaa?.iqama) {
-      const jumaaIndex = prayers.findIndex(p => p.name === PRAYER_NAMES.dhuhr.en);
-      if (jumaaIndex !== -1) {
-        prayers.splice(jumaaIndex + 1, 0, {
-          name: PRAYER_NAMES.jumaa.en,
-          nameArabic: PRAYER_NAMES.jumaa.ar,
-          apt: '--:--',
-          mat: dailyConfig.specialPrayers.jumaa.adhan,
-          mit: dailyConfig.specialPrayers.jumaa.iqama,
-          isNext: false,
+      const idx = prayers.findIndex(p => p.name === PRAYER_NAMES.dhuhr.en);
+      if (idx !== -1) {
+        prayers.splice(idx + 1, 0, {
+          name: PRAYER_NAMES.jumaa.en, nameArabic: PRAYER_NAMES.jumaa.ar,
+          apt: '--:--', mat: dailyConfig.specialPrayers.jumaa.adhan,
+          mit: dailyConfig.specialPrayers.jumaa.iqama, isNext: false,
         });
       }
     }
 
-    // Add Taraweeh prayer (during Ramadan, after Isha)
     if (dailyConfig.specialPrayers.taraweeh?.time) {
-      const ishaIndex = prayers.findIndex(p => p.name === PRAYER_NAMES.isha.en);
-      if (ishaIndex !== -1) {
-        prayers.splice(ishaIndex + 1, 0, {
-          name: PRAYER_NAMES.taraweeh.en,
-          nameArabic: PRAYER_NAMES.taraweeh.ar,
-          apt: '--:--',
-          mat: dailyConfig.specialPrayers.taraweeh.time,
-          mit: dailyConfig.specialPrayers.taraweeh.time,
-          isNext: false,
-          isSpecial: true,
+      const idx = prayers.findIndex(p => p.name === PRAYER_NAMES.isha.en);
+      if (idx !== -1) {
+        prayers.splice(idx + 1, 0, {
+          name: PRAYER_NAMES.taraweeh.en, nameArabic: PRAYER_NAMES.taraweeh.ar,
+          apt: '--:--', mat: dailyConfig.specialPrayers.taraweeh.time,
+          mit: dailyConfig.specialPrayers.taraweeh.time, isNext: false, isSpecial: true,
         });
       }
     }
 
-    // Add Eid al-Fitr prayers (if scheduled)
     if (dailyConfig.specialPrayers.eidFitr?.prayer1?.time) {
-      prayers.push({
-        name: `${PRAYER_NAMES.eidFitr.en} - Prayer 1`,
-        nameArabic: `${PRAYER_NAMES.eidFitr.ar} - صلاة ١`,
-        apt: '--:--', mat: '--:--',
-        mit: dailyConfig.specialPrayers.eidFitr.prayer1.time,
-        isNext: false, isSpecial: true,
-      });
+      prayers.push({ name: `${PRAYER_NAMES.eidFitr.en} - Prayer 1`, nameArabic: `${PRAYER_NAMES.eidFitr.ar} - صلاة ١`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidFitr.prayer1.time, isNext: false, isSpecial: true });
     }
     if (dailyConfig.specialPrayers.eidFitr?.prayer2?.time) {
-      prayers.push({
-        name: `${PRAYER_NAMES.eidFitr.en} - Prayer 2`,
-        nameArabic: `${PRAYER_NAMES.eidFitr.ar} - صلاة ٢`,
-        apt: '--:--', mat: '--:--',
-        mit: dailyConfig.specialPrayers.eidFitr.prayer2.time,
-        isNext: false, isSpecial: true,
-      });
+      prayers.push({ name: `${PRAYER_NAMES.eidFitr.en} - Prayer 2`, nameArabic: `${PRAYER_NAMES.eidFitr.ar} - صلاة ٢`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidFitr.prayer2.time, isNext: false, isSpecial: true });
     }
-
-    // Add Eid al-Adha prayers (if scheduled)
     if (dailyConfig.specialPrayers.eidAdha?.prayer1?.time) {
-      prayers.push({
-        name: `${PRAYER_NAMES.eidAdha.en} - Prayer 1`,
-        nameArabic: `${PRAYER_NAMES.eidAdha.ar} - صلاة ١`,
-        apt: '--:--', mat: '--:--',
-        mit: dailyConfig.specialPrayers.eidAdha.prayer1.time,
-        isNext: false, isSpecial: true,
-      });
+      prayers.push({ name: `${PRAYER_NAMES.eidAdha.en} - Prayer 1`, nameArabic: `${PRAYER_NAMES.eidAdha.ar} - صلاة ١`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidAdha.prayer1.time, isNext: false, isSpecial: true });
     }
     if (dailyConfig.specialPrayers.eidAdha?.prayer2?.time) {
-      prayers.push({
-        name: `${PRAYER_NAMES.eidAdha.en} - Prayer 2`,
-        nameArabic: `${PRAYER_NAMES.eidAdha.ar} - صلاة ٢`,
-        apt: '--:--', mat: '--:--',
-        mit: dailyConfig.specialPrayers.eidAdha.prayer2.time,
-        isNext: false, isSpecial: true,
-      });
+      prayers.push({ name: `${PRAYER_NAMES.eidAdha.en} - Prayer 2`, nameArabic: `${PRAYER_NAMES.eidAdha.ar} - صلاة ٢`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidAdha.prayer2.time, isNext: false, isSpecial: true });
     }
 
-    // Find and mark next prayer
+    // Mark next prayer
     const nextPrayer = getNextPrayer(prayers);
-    prayers.forEach(prayer => {
-      prayer.isNext = nextPrayer ? prayer.name === nextPrayer.name : false;
-    });
-
-    // Format dates
-    const gregorianDate = formatAladhanGregorianDate(aladhanData.date);
-    const hijriDate = formatAladhanHijriDate(aladhanData.date);
+    prayers.forEach(p => { p.isNext = nextPrayer ? p.name === nextPrayer.name : false; });
 
     const result: CombinedPrayerData = {
       prayers,
-      gregorianDate,
-      hijriDate,
-      announcements: announcementsList,
-      lastUpdated: new Date().toISOString(),
+      gregorianDate: formatAladhanGregorianDate(aladhanData.date),
+      hijriDate:     formatAladhanHijriDate(aladhanData.date),
+      announcements: announcementsData.list || [],
+      lastUpdated:   new Date().toISOString(),
       nextPrayer,
       apiConfig,
     };
 
-    console.log('✅ All prayer data fetched and combined successfully');
+    console.log('✅ All prayer data combined successfully');
     return result;
   } catch (error) {
     console.error('❌ Error fetching all prayer data:', error);
