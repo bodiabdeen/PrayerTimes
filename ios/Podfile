@@ -79,6 +79,25 @@ target 'IOMPrayerTimes' do
         end
       end
     end
+
+    # Fix fmt 11.0.2 with newer Apple clang:
+    # allow externally defining FMT_USE_CONSTEVAL (we set it to 0 below).
+    fmt_base_h_path = File.join(installer.sandbox.root, 'fmt/include/fmt/base.h')
+    if File.exist?(fmt_base_h_path)
+      system("chmod +w '#{fmt_base_h_path}'")
+      fmt_content = File.read(fmt_base_h_path)
+      fmt_marker = '#if !defined(__cpp_lib_is_constant_evaluated)'
+      if fmt_content.include?(fmt_marker) && !fmt_content.include?('#if defined(FMT_USE_CONSTEVAL)')
+        patched_fmt_content = fmt_content.sub(
+          fmt_marker,
+          "#if defined(FMT_USE_CONSTEVAL)\n// Use the provided definition.\n#elif !defined(__cpp_lib_is_constant_evaluated)"
+        )
+        if fmt_content != patched_fmt_content
+          File.write(fmt_base_h_path, patched_fmt_content)
+          puts "Patched #{fmt_base_h_path} to respect FMT_USE_CONSTEVAL"
+        end
+      end
+    end
     
     # Fix BoringSSL-GRPC build issue with unsupported -G flag on iOS simulator
     # The -GCC_WARN_INHIBIT_ALL_WARNINGS flag is being interpreted as -G by newer clang versions
@@ -109,6 +128,21 @@ target 'IOMPrayerTimes' do
       if target.name == 'nanopb'
         target.build_configurations.each do |config|
           config.build_settings['CLANG_ENABLE_MODULES'] = 'NO'
+        end
+      end
+    end
+
+    # Xcode 26 + fmt 11.0.2 can fail consteval validation in FMT_STRING.
+    # Disable fmt consteval until RN updates the vendored fmt podspec.
+    installer.pods_project.targets.each do |target|
+      if target.name == 'fmt'
+        target.build_configurations.each do |config|
+          defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)']
+          defs = [defs] if defs.is_a?(String)
+          unless defs.include?('FMT_USE_CONSTEVAL=0')
+            defs << 'FMT_USE_CONSTEVAL=0'
+          end
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
         end
       end
     end
