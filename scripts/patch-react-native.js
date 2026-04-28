@@ -12,6 +12,7 @@ const newArchPath = path.join(rnRoot, 'scripts', 'cocoapods', 'new_architecture.
 const rootViewFactoryPath = path.join(rnRoot, 'Libraries', 'AppDelegate', 'RCTRootViewFactory.mm');
 const reactNativeFactoryPath = path.join(rnRoot, 'Libraries', 'AppDelegate', 'RCTReactNativeFactory.mm');
 const rctBridgePath = path.join(rnRoot, 'React', 'Base', 'RCTBridge.mm');
+const rnXcodeScriptPath = path.join(rnRoot, 'scripts', 'react-native-xcode.sh');
 
 if (!fs.existsSync(rnRoot)) {
   process.exit(0);
@@ -112,6 +113,23 @@ if (fs.existsSync(rctBridgePath)) {
       '+ (void)throwIfOnLegacyArch\n{\n  // No-op so bridge can initialize when using legacy path (Podfile ENV RCT_NEW_ARCH_ENABLED=0).\n}'
     );
     fs.writeFileSync(rctBridgePath, content);
+    changed = true;
+  }
+}
+
+// 8) react-native-xcode.sh: if HERMES_CLI_PATH is set but invalid, fall back to Pods hermesc.
+// This fixes Archive failures when a stale HERMES_CLI_PATH points to a different checkout.
+if (fs.existsSync(rnXcodeScriptPath)) {
+  let content = fs.readFileSync(rnXcodeScriptPath, 'utf8');
+  const search = 'HERMES_ENGINE_PATH="$PODS_ROOT/hermes-engine"\\n[ -z "$HERMES_CLI_PATH" ] && HERMES_CLI_PATH="$HERMES_ENGINE_PATH/destroot/bin/hermesc"';
+  const replace =
+    'HERMES_ENGINE_PATH="$PODS_ROOT/hermes-engine"\\n' +
+    'if [[ -z "$HERMES_CLI_PATH" || ! -f "$HERMES_CLI_PATH" ]]; then\\n' +
+    '  HERMES_CLI_PATH="$HERMES_ENGINE_PATH/destroot/bin/hermesc"\\n' +
+    'fi';
+  if (content.includes('HERMES_ENGINE_PATH="$PODS_ROOT/hermes-engine"') && content.includes('[ -z "$HERMES_CLI_PATH" ] && HERMES_CLI_PATH=') && !content.includes('|| ! -f "$HERMES_CLI_PATH"')) {
+    content = content.replace(search, replace);
+    fs.writeFileSync(rnXcodeScriptPath, content);
     changed = true;
   }
 }
