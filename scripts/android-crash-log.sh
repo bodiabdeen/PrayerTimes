@@ -6,7 +6,7 @@ set -e
 adb logcat -c
 echo "Logcat cleared. Launch the app on the device/emulator now..."
 if [[ "${1:-}" == "--start" ]]; then
-  adb shell am start -n com.iomprayertimes/.MainActivity
+  adb shell am start -n com.jicprayertimes/.MainActivity
 fi
 sleep 4
 echo "--- Recent logcat (FATAL, ReactNative, app, SoLoader) ---"
