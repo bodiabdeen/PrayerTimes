@@ -16,7 +16,7 @@ export const DateDisplay: React.FC<DateDisplayProps> = ({
   return (
     <View style={styles.container}>
       <Text style={[styles.title, {color: theme.text}]}>
-        The Isle of Man Islamic Centre
+        Jersey Islamic Centre
       </Text>
       
       <Text style={[styles.subtitle, {color: theme.textSecondary}]}>
