@@ -300,7 +300,7 @@ function AppContent(): React.JSX.Element {
           onNextPrayerChange={handleNextPrayerChange}
         />
         <PrayerTimesTable prayers={prayerData.prayers} nextPrayerName={currentNextPrayer?.name || null} />
-        <ConfigInfo config={prayerData.apiConfig || null} />
+        {/* <ConfigInfo config={prayerData.apiConfig || null} /> */}
         <View style={{height: 72}} />
       </ScrollView>
 

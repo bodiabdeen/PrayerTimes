@@ -1,0 +1,48 @@
+diff --git a/node_modules/@react-native-community/cli-platform-android/build/commands/buildAndroid/index.js b/node_modules/@react-native-community/cli-platform-android/build/commands/buildAndroid/index.js
+index 512f3f1..8ca39fb 100644
+--- a/node_modules/@react-native-community/cli-platform-android/build/commands/buildAndroid/index.js
++++ b/node_modules/@react-native-community/cli-platform-android/build/commands/buildAndroid/index.js
+@@ -67,13 +67,14 @@ async function buildAndroid(_argv, config, args) {
+ }
+ function build(gradleArgs, sourceDir) {
+   process.chdir(sourceDir);
+-  const cmd = process.platform.startsWith('win') ? 'gradlew.bat' : './gradlew';
++  const cmd = process.platform.startsWith('win') ? '.\\gradlew.bat' : './gradlew';
+   _cliTools().logger.info('Building the app...');
+   _cliTools().logger.debug(`Running command "${cmd} ${gradleArgs.join(' ')}"`);
+   try {
+     _execa().default.sync(cmd, gradleArgs, {
+       stdio: 'inherit',
+-      cwd: sourceDir
++      cwd: sourceDir,
++      shell: process.platform.startsWith('win')
+     });
+   } catch (error) {
+     (0, _cliTools().printRunDoctorTip)();
+diff --git a/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/index.js b/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/index.js
+index 0b96cf5..7794c95 100644
+--- a/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/index.js
++++ b/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/index.js
+@@ -144,7 +144,7 @@ async function buildAndRun(args, androidProject) {
+     args.device = args.deviceId;
+   }
+   process.chdir(androidProject.sourceDir);
+-  const cmd = process.platform.startsWith('win') ? 'gradlew.bat' : './gradlew';
++  const cmd = process.platform.startsWith('win') ? '.\\gradlew.bat' : './gradlew';
+   const adbPath = (0, _getAdbPath.default)();
+   let selectedTask;
+   if (args.interactive) {
+diff --git a/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/runOnAllDevices.js b/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/runOnAllDevices.js
+index 12397cf..c0234d4 100644
+--- a/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/runOnAllDevices.js
++++ b/node_modules/@react-native-community/cli-platform-android/build/commands/runAndroid/runOnAllDevices.js
+@@ -75,7 +75,8 @@ async function runOnAllDevices(args, cmd, adbPath, androidProject) {
+       _cliTools().logger.debug(`Running command "cd android && ${cmd} ${gradleArgs.join(' ')}"`);
+       await (0, _execa().default)(cmd, gradleArgs, {
+         stdio: ['inherit', 'inherit', 'pipe'],
+-        cwd: androidProject.sourceDir
++        cwd: androidProject.sourceDir,
++        shell: process.platform.startsWith('win')
+       });
+     }
+   } catch (error) {
