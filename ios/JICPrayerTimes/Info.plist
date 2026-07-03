@@ -39,6 +39,11 @@
 	<string>We need permission to send you prayer time notifications so you never miss a prayer.</string>
 	<key>RCTNewArchEnabled</key>
 	<false/>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.transistorsoft.fetch</string>
+		<string>com.jicprayertimes.test</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
