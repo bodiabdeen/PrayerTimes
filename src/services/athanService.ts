@@ -23,6 +23,7 @@ export interface AthanPreferences {
     maghrib: PrayerAthanConfig;
     isha: PrayerAthanConfig;
     jumaa: PrayerAthanConfig;
+    jumaa2: PrayerAthanConfig;
   };
   athanSound: string; // key from ATHAN_SOUNDS
 }
@@ -67,6 +68,7 @@ export const DEFAULT_ATHAN_PREFERENCES: AthanPreferences = {
     maghrib: {...OFF},
     isha:    {...OFF},
     jumaa:   {enabled: false, playOnApt: false, playOnMat: true},
+    jumaa2:  {enabled: false, playOnApt: false, playOnMat: true},
   },
   athanSound: 'adhan_makkah',
 };
@@ -112,6 +114,10 @@ export const getPrayerAthanKey = (
   if (lower.startsWith('asr'))     return 'asr';
   if (lower.startsWith('maghrib')) return 'maghrib';
   if (lower.startsWith('isha'))    return 'isha';
+  // Check the 2nd Jumu'ah before the generic Jumu'ah pattern — its name
+  // ("Jumu'ah 2 ...") also contains "jumu'ah" and would otherwise be
+  // misclassified as the first Jumu'ah.
+  if (lower.includes('jumaa2') || lower.startsWith("jumu'ah 2")) return 'jumaa2';
   if (lower.includes('jumaa') || lower.includes("jumu'ah")) return 'jumaa';
   return null;
 };

@@ -36,6 +36,7 @@ export const PRAYER_NAMES = {
   maghrib:  { en: 'Maghrib المغرب',         ar: 'المغرب' },
   isha:     { en: 'Isha العشاء',            ar: 'العشاء' },
   jumaa:    { en: "Jumu'ah الجمعة",         ar: 'الجمعة' },
+  jumaa2:   { en: "Jumu'ah 2 الجمعة ٢",     ar: 'الجمعة ٢' },
   taraweeh: { en: 'Taraweeh التراويح',      ar: 'التراويح' },
   eidFitr:  { en: 'Eid al-Fitr عيد الفطر', ar: 'عيد الفطر' },
   eidAdha:  { en: 'Eid al-Adha عيد الأضحى', ar: 'عيد الأضحى' },

@@ -245,13 +245,20 @@ export const scheduleAllPrayerNotifications = async (
     }
 
     // ── Jumu'ah – Friday only ──────────────────────────────────────────────
-    const jumaaPrayer = prayers.find(
+    // Supports 1 or 2 Jumu'ah entries (order matches how they appear in the
+    // prayers list). Each gets its own notification IDs so a second Jumu'ah
+    // never overwrites the first one's scheduled notification.
+    const jumaaPrayers = prayers.filter(
       p =>
         p.name.toLowerCase().includes('jumaa') ||
         p.name.toLowerCase().includes("jumu'ah"),
     );
 
-    if (jumaaPrayer) {
+    for (let i = 0; i < jumaaPrayers.length; i++) {
+      const jumaaPrayer = jumaaPrayers[i];
+      const idPrefix = i === 0 ? 'jumaa' : `jumaa${i + 1}`;
+      const label = i === 0 ? "Jumu'ah" : `Jumu'ah ${i + 1}`;
+
       if (jumaaPrayer.mat && jumaaPrayer.mat !== '--:--') {
         const jumaaMatTime = parseTimeToDate(jumaaPrayer.mat);
         if (jumaaMatTime && jumaaMatTime.getDay() === 5) {
@@ -259,14 +266,14 @@ export const scheduleAllPrayerNotifications = async (
             jumaaPrayer.name, 'mat', athanPrefs,
           );
           await scheduleEventNotification(
-            'jumaa_mat',
-            "📢 Jumu'ah - Khutba & Adhan",
-            `Jumu'ah Khutba and Adhan at ${jumaaPrayer.mat}`,
+            `${idPrefix}_mat`,
+            `📢 ${label} - Khutba & Adhan`,
+            `${label} Khutba and Adhan at ${jumaaPrayer.mat}`,
             jumaaMatTime,
             androidChannelId,
             iosSound,
           );
-          console.log(`✅ Scheduled Jumu'ah MAT for Friday`);
+          console.log(`✅ Scheduled ${label} MAT for Friday`);
         }
       }
 
@@ -275,12 +282,12 @@ export const scheduleAllPrayerNotifications = async (
         if (jumaaMitTime && jumaaMitTime.getDay() === 5) {
           // No athan audio for MIT
           await scheduleEventNotification(
-            'jumaa_mit',
-            "🕋 Jumu'ah - Iqama",
-            `Jumu'ah prayer starts at ${jumaaPrayer.mit}`,
+            `${idPrefix}_mit`,
+            `🕋 ${label} - Iqama`,
+            `${label} prayer starts at ${jumaaPrayer.mit}`,
             jumaaMitTime,
           );
-          console.log(`✅ Scheduled Jumu'ah MIT for Friday`);
+          console.log(`✅ Scheduled ${label} MIT for Friday`);
         }
       }
     }

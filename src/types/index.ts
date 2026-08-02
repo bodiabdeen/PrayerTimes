@@ -67,6 +67,10 @@ export interface DailyConfig {
       adhan: string;
       iqama: string;
     };
+    jumaa2?: {
+      adhan: string;
+      iqama: string;
+    };
     taraweeh?: {
       time: string;
     };

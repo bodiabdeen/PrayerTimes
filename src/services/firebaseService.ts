@@ -210,6 +210,10 @@ export const fetchDailyConfig = async (): Promise<DailyConfig | null> => {
           adhan: rawData.jumaa.adhan_khutba || '',
           iqama: rawData.jumaa.iqama || '',
         } : undefined,
+        jumaa2: rawData.jumaa2 ? {
+          adhan: rawData.jumaa2.adhan_khutba || '',
+          iqama: rawData.jumaa2.iqama || '',
+        } : undefined,
         taraweeh: rawData.taraweeh?.time ? {
           time: rawData.taraweeh.time,
         } : undefined,
@@ -415,6 +419,20 @@ export const fetchAllPrayerData = async (): Promise<CombinedPrayerData | null> =
           name: PRAYER_NAMES.jumaa.en, nameArabic: PRAYER_NAMES.jumaa.ar,
           apt: '--:--', mat: dailyConfig.specialPrayers.jumaa.adhan,
           mit: dailyConfig.specialPrayers.jumaa.iqama, isNext: false,
+        });
+      }
+    }
+
+    // 2nd Jumu'ah — optional, only shown when set in dailyConfig (new app only field)
+    if (dailyConfig.specialPrayers.jumaa2?.iqama) {
+      const jumaaIdx = prayers.findIndex(p => p.name === PRAYER_NAMES.jumaa.en);
+      const dhuhrIdx = prayers.findIndex(p => p.name === PRAYER_NAMES.dhuhr.en);
+      const insertAt = jumaaIdx !== -1 ? jumaaIdx + 1 : dhuhrIdx + 1;
+      if (insertAt !== -1) {
+        prayers.splice(insertAt, 0, {
+          name: PRAYER_NAMES.jumaa2.en, nameArabic: PRAYER_NAMES.jumaa2.ar,
+          apt: '--:--', mat: dailyConfig.specialPrayers.jumaa2.adhan,
+          mit: dailyConfig.specialPrayers.jumaa2.iqama, isNext: false,
         });
       }
     }

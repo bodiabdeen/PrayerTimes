@@ -22,6 +22,7 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
     maghrib: {en: 'Maghrib Prayer', ar: 'صلاة المغرب'},
     isha: {en: 'Isha Prayer', ar: 'صلاة العشاء'},
     jumaa: {en: "Jumu'ah Prayer", ar: 'صلاة الجمعة'},
+    jumaa2: {en: "Jumu'ah 2 Prayer", ar: 'صلاة الجمعة ٢'},
   };
 
   const columnHeaders = [

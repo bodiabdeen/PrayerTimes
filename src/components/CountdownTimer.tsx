@@ -105,8 +105,12 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
     
     // Extract English prayer name (before any Arabic text)
     // "Fajr الفجر" → "Fajr"
-    const cleanName = currentNextPrayer.name.split(' ')[0];
-    
+    // "Jumu'ah 2 ..." is checked before the generic split since it shares
+    // its first word with "Jumu'ah ..." and would otherwise be indistinguishable.
+    const cleanName = currentNextPrayer.name.startsWith("Jumu'ah 2")
+      ? 'jumaa2'
+      : currentNextPrayer.name.split(' ')[0].toLowerCase();
+
     const prayerNames: {[key: string]: string} = {
       fajr: 'Fajr',
       dhuhr: 'Dhuhr',
@@ -114,10 +118,11 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
       maghrib: 'Maghrib',
       isha: 'Isha',
       jumaa: "Jumu'ah",
+      jumaa2: "Jumu'ah 2",
       taraweeh: 'Taraweeh',
     };
 
-    const prayerName = prayerNames[cleanName.toLowerCase()] || cleanName;
+    const prayerName = prayerNames[cleanName] || currentNextPrayer.name.split(' ')[0];
     
     // Check if this prayer time already passed today
     const now = new Date();

@@ -37,6 +37,7 @@ const PRAYER_ROWS: PrayerRow[] = [
   {key: 'maghrib', label: 'Maghrib', hasApt: true},
   {key: 'isha',    label: 'Isha',    hasApt: true},
   {key: 'jumaa',   label: "Jumu'ah", hasApt: false},
+  {key: 'jumaa2',  label: "Jumu'ah 2", hasApt: false},
 ];
 
 // ─── Chip (module-level, no hooks) ────────────────────────────────────────────
@@ -264,7 +265,7 @@ export const AthanSettingsModal = ({
                       />
                     )}
                     <Chip
-                      label={row.key === 'jumaa' ? 'Khutba / Adhan' : 'Adhan Time'}
+                      label={(row.key === 'jumaa' || row.key === 'jumaa2') ? 'Khutba / Adhan' : 'Adhan Time'}
                       active={cfg.playOnMat}
                       disabled={!cfg.enabled}
                       onPress={() => toggleMat(row.key)}
