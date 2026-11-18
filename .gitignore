@@ -81,3 +81,11 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Signing keys and their passwords: never commit these (v1.6).
+# They stay on disk for local release builds; keep a safe copy outside the repo.
+*.jks
+keystore.properties
+
+# Android release build outputs
+android/app/release/
