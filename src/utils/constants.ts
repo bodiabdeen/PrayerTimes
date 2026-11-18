@@ -9,6 +9,9 @@ export const FIREBASE_CONFIG = {
     // ★ NEW — per-date MAT/MIT overrides, read by new app only.
     //   Old installed app never reads this document — zero impact on live users.
     SCHEDULED_TIMES: 'scheduledTimes',
+    // v1.6: special prayers created by the admin. A new document that older app
+    // versions never read, so it cannot affect them.
+    SPECIAL_PRAYERS: 'specialPrayers',
   },
 };
 

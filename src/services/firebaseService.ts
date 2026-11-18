@@ -17,7 +17,8 @@ import {
 } from '@react-native-firebase/firestore';
 import { getApps } from '@react-native-firebase/app';
 import { FIREBASE_CONFIG, PRAYER_NAMES } from '../utils/constants';
-import { ApiConfig, DailyConfig, AnnouncementsData, CombinedPrayerData, Prayer } from '../types';
+import { ApiConfig, DailyConfig, AnnouncementsData, CombinedPrayerData, Prayer, SpecialPrayerItem } from '../types';
+import { buildSpecialPrayerRows, parseSpecialPrayers } from '../utils/specialPrayers';
 import {
   fetchPrayerTimesFromAladhan,
   convertAladhanTimings,
@@ -317,6 +318,25 @@ export const fetchAnnouncements = async (): Promise<AnnouncementsData | null> =>
 };
 
 // ─────────────────────────────────────────────────────────────────────────
+// Fetch special prayers  (prayerTimes/specialPrayers)
+// ★ v1.6, new app only: older app versions never read this document.
+// Never fatal: any problem returns an empty list and prayer times load as normal.
+// ─────────────────────────────────────────────────────────────────────────
+export const fetchSpecialPrayers = async (): Promise<SpecialPrayerItem[]> => {
+  try {
+    const db = getFirestore();
+    const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.SPECIAL_PRAYERS));
+    if (!docSnap.exists()) return [];
+    const items = parseSpecialPrayers(docSnap.data());
+    console.log(`✅ Special prayers fetched (${items.length})`);
+    return items;
+  } catch (error) {
+    console.error('❌ Error fetching special prayers (ignored):', error);
+    return [];
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
 // Combine all data — main entry point called by the app
 // ─────────────────────────────────────────────────────────────────────────
 export const fetchAllPrayerData = async (): Promise<CombinedPrayerData | null> => {
@@ -460,6 +480,11 @@ export const fetchAllPrayerData = async (): Promise<CombinedPrayerData | null> =
     if (dailyConfig.specialPrayers.eidAdha?.prayer2?.time) {
       prayers.push({ name: `${PRAYER_NAMES.eidAdha.en} - Prayer 2`, nameArabic: `${PRAYER_NAMES.eidAdha.ar} - صلاة ٢`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidAdha.prayer2.time, isNext: false, isSpecial: true });
     }
+
+    // v1.6: special prayers created by the admin, after the built-in special prayers.
+    // They have no APT, so they never become the "next prayer", the widget or the countdown.
+    const specialPrayers = await fetchSpecialPrayers();
+    prayers.push(...buildSpecialPrayerRows(specialPrayers, new Date()));
 
     // Mark next prayer
     const nextPrayer = getNextPrayer(prayers);

@@ -163,6 +163,11 @@ export const scheduleAllPrayerNotifications = async (
     const athanPrefs = await getAthanPreferences();
 
     for (const prayer of prayers) {
+      // v1.6: no notifications for admin-created special prayers. Their names are free text, so the
+      // name matching below could mistake one for a daily prayer or Jumu'ah, and it ignores dates.
+      if (prayer.isCustom) {
+        continue;
+      }
       const prayerNameClean = prayer.name.replace(/\s+/g, '_').toLowerCase();
       const isSunrise = prayer.name.toLowerCase().startsWith('sunrise');
       const isDhuhr   = prayer.name.toLowerCase().startsWith('dhuhr');
@@ -250,8 +255,9 @@ export const scheduleAllPrayerNotifications = async (
     // never overwrites the first one's scheduled notification.
     const jumaaPrayers = prayers.filter(
       p =>
-        p.name.toLowerCase().includes('jumaa') ||
-        p.name.toLowerCase().includes("jumu'ah"),
+        !p.isCustom &&
+        (p.name.toLowerCase().includes('jumaa') ||
+          p.name.toLowerCase().includes("jumu'ah")),
     );
 
     for (let i = 0; i < jumaaPrayers.length; i++) {

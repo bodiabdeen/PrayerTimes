@@ -24,6 +24,24 @@ export interface Prayer {
   mit: string; // Masjid Iqama Time (when congregation starts)
   isNext: boolean; // Highlight indicator
   isSpecial?: boolean; // True for Taraweeh/Eid (shows only one time)
+  // Admin-created special prayer (Firestore prayerTimes/specialPrayers). The time is in `mit`.
+  isCustom?: boolean;
+  customId?: string;
+  date?: string; // 'YYYY-MM-DD' the prayer takes place
+  showFrom?: string; // 'YYYY-MM-DDTHH:MM' local time, '' = straight away
+  hideAfter?: string; // 'YYYY-MM-DDTHH:MM' local time
+}
+
+/**
+ * Special prayer created by the admin (Firestore: prayerTimes/specialPrayers, field `list`)
+ */
+export interface SpecialPrayerItem {
+  id: string;
+  name: string;
+  date: string; // 'YYYY-MM-DD'
+  time: string; // 'HH:MM'
+  showFrom: string; // 'YYYY-MM-DDTHH:MM' or ''
+  hideAfter: string; // 'YYYY-MM-DDTHH:MM'
 }
 
 /**
