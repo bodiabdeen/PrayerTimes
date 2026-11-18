@@ -1,7 +1,9 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 import {Prayer} from '../types';
+import {formatSpecialPrayerDay, isSpecialPrayerVisible} from '../utils/specialPrayers';
+import {BreathingHighlight, FadeInView} from './motion';
 
 interface PrayerTimesTableProps {
   prayers: Prayer[];
@@ -13,6 +15,19 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
   nextPrayerName,
 }) => {
   const {theme, formatTime} = useTheme();
+
+  // v1.6: re-check every minute which admin special prayers should be visible
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  const visiblePrayers = prayers.filter(p => !p.isCustom || isSpecialPrayerVisible(p, now));
+
+  const dayLabel = (dateKey: string): string => {
+    const label = formatSpecialPrayerDay(dateKey, now);
+    return label.ar ? `${label.en} / ${label.ar}` : label.en;
+  };
 
   const prayerLabels: {[key: string]: {en: string; ar: string}} = {
     fajr: {en: 'Fajr Prayer', ar: 'صلاة الفجر'},
@@ -33,13 +48,16 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
 
   return (
     <View style={styles.container}>
-      {prayers.map((prayer, index) => {
-        const isNext = prayer.name === nextPrayerName;
+      {visiblePrayers.map((prayer, index) => {
+        // Admin special prayers are never "next" (and their free-text name could match a prayer's)
+        const isNext = !prayer.isCustom && prayer.name === nextPrayerName;
         const label = prayerLabels[prayer.name] || {en: prayer.name, ar: ''};
 
         return (
-          <View
-            key={`${prayer.name}-${index}`}
+          <FadeInView
+            // Stable keys, so a refresh does not replay the entrance animation
+            key={prayer.isCustom ? `custom-${prayer.customId}` : prayer.name}
+            delay={Math.min(index, 10) * 60}
             style={[
               styles.prayerCard,
               {
@@ -49,6 +67,7 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
               },
               isNext && styles.nextPrayerCard,
             ]}>
+            {isNext && <BreathingHighlight color={theme.accent} radius={10} />}
             <View style={styles.prayerHeader}>
               <Text style={[styles.prayerName, {color: theme.text}]}>
                 {label.en}
@@ -61,7 +80,7 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
             {prayer.isSpecial ? (
               <View style={styles.specialPrayerTime}>
                 <Text style={[styles.specialTimeLabel, {color: theme.textSecondary}]}>
-                  Time / الوقت
+                  {prayer.isCustom && prayer.date ? dayLabel(prayer.date) : 'Time / الوقت'}
                 </Text>
                 <Text style={[
                   styles.specialTime,
@@ -122,7 +141,7 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
                 </View>
               </View>
             )}
-          </View>
+          </FadeInView>
         );
       })}
     </View>

@@ -1,9 +1,13 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, Animated, Easing} from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 import {Prayer} from '../types';
 import {UPDATE_INTERVAL} from '../utils/constants';
 import {getNextPrayer} from '../utils/prayerUtils';
+import {useReduceMotion} from './motion';
+
+// v1.6: in the last five minutes the countdown takes a warm tint and pulses slowly
+const SOON_MS = 5 * 60 * 1000;
 
 interface CountdownTimerProps {
   nextPrayer: Prayer | null;
@@ -15,6 +19,49 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
   const {theme} = useTheme();
   const [countdown, setCountdown] = useState<string>('--:--:--');
   const [currentNextPrayer, setCurrentNextPrayer] = useState<Prayer | null>(initialNextPrayer);
+  const [isSoon, setIsSoon] = useState(false);
+
+  // v1.6: gentle animations (skipped when the phone's "Reduce motion" setting is on)
+  const reduceMotion = useReduceMotion();
+  const nameOpacity = useRef(new Animated.Value(1)).current;
+  const countdownOpacity = useRef(new Animated.Value(1)).current;
+  const nextPrayerName = currentNextPrayer?.name;
+
+  // The prayer name fades in when the next prayer changes
+  useEffect(() => {
+    if (reduceMotion) {
+      nameOpacity.setValue(1);
+      return;
+    }
+    nameOpacity.setValue(0);
+    const fade = Animated.timing(nameOpacity, {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    fade.start();
+    return () => fade.stop();
+  }, [nextPrayerName, reduceMotion, nameOpacity]);
+
+  // Slow pulse in the last five minutes
+  useEffect(() => {
+    if (!isSoon || reduceMotion) {
+      countdownOpacity.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(countdownOpacity, {toValue: 0.7, duration: 1200, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
+        Animated.timing(countdownOpacity, {toValue: 1, duration: 1200, easing: Easing.inOut(Easing.sin), useNativeDriver: true}),
+      ]),
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      countdownOpacity.setValue(1);
+    };
+  }, [isSoon, reduceMotion, countdownOpacity]);
 
   useEffect(() => {
     if (!prayers || prayers.length === 0) {
@@ -80,6 +127,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
           setCountdown('--:--:--');
           return;
         }
+
+        setIsSoon(diff <= SOON_MS);
 
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
@@ -162,13 +211,17 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
         Next Prayer
       </Text>
       
-      <Text style={[styles.prayerName, {color: theme.accent}]}>
+      <Animated.Text style={[styles.prayerName, {color: theme.accent, opacity: nameOpacity}]}>
         {getNextPrayerLabel()}
-      </Text>
-      
-      <Text style={[styles.countdown, {color: theme.text}]}>
+      </Animated.Text>
+
+      <Animated.Text
+        style={[
+          styles.countdown,
+          {color: isSoon ? theme.warning : theme.text, opacity: countdownOpacity},
+        ]}>
         {countdown}
-      </Text>
+      </Animated.Text>
     </View>
   );
 };
