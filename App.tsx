@@ -23,6 +23,7 @@ import {AthanSettingsModal} from './src/components/AthanSettingsModal';
 import {WhatsNewModal} from './src/components/WhatsNewModal';
 import {LoadingSpinner} from './src/components/LoadingSpinner';
 import {ConfigInfo} from './src/components/ConfigInfo';
+import {DayChoice, DayToggle} from './src/components/DayToggle';
 import {fetchAllPrayerData} from './src/services/firebaseService';
 import {loadCachedData, saveCachedData} from './src/services/cacheService';
 import {updateWidget} from './src/services/widgetService';
@@ -58,6 +59,12 @@ function AppContent(): React.JSX.Element {
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentNextPrayer, setCurrentNextPrayer] = useState<typeof prayerData extends {prayers: any[]} ? ReturnType<typeof getNextPrayer> : null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  // v1.6: Today | Tomorrow switch. Goes back to Today when a new day's data arrives.
+  const [dayChoice, setDayChoice] = useState<DayChoice>('today');
+  const tomorrowKey = prayerData?.tomorrow?.dateKey;
+  useEffect(() => {
+    setDayChoice('today');
+  }, [tomorrowKey]);
 
   useEffect(() => {
     console.log('🚀 App initializing... Bottom inset:', insets.bottom, 'px');
@@ -182,6 +189,8 @@ function AppContent(): React.JSX.Element {
       announcements: announcementsList,
       lastUpdated: data.lastUpdated || new Date().toISOString(),
       apiConfig: data.apiConfig || null,
+      // v1.6: keep tomorrow's prayers (older cached data has none)
+      tomorrow: data.tomorrow && Array.isArray(data.tomorrow.prayers) ? data.tomorrow : null,
     };
   };
 
@@ -299,7 +308,19 @@ function AppContent(): React.JSX.Element {
           prayers={prayerData.prayers}
           onNextPrayerChange={handleNextPrayerChange}
         />
-        <PrayerTimesTable prayers={prayerData.prayers} nextPrayerName={currentNextPrayer?.name || null} />
+        {prayerData.tomorrow ? (
+          <DayToggle
+            value={dayChoice}
+            onChange={setDayChoice}
+            tomorrowSubtitle={`${prayerData.tomorrow.gregorianDate} · ${prayerData.tomorrow.hijriDate}`}
+          />
+        ) : null}
+        {dayChoice === 'tomorrow' && prayerData.tomorrow ? (
+          // key: switching days replays the gentle entrance of the cards
+          <PrayerTimesTable key="tomorrow" prayers={prayerData.tomorrow.prayers} nextPrayerName={null} />
+        ) : (
+          <PrayerTimesTable key="today" prayers={prayerData.prayers} nextPrayerName={currentNextPrayer?.name || null} />
+        )}
         <ConfigInfo config={prayerData.apiConfig || null} />
         <View style={{height: 72}} />
       </ScrollView>

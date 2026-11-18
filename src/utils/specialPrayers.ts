@@ -110,6 +110,13 @@ export const buildSpecialPrayerRows = (items: SpecialPrayerItem[], now: Date): P
     }));
 };
 
+/** A short date such as "Fri 20 Nov" for a 'YYYY-MM-DD' key */
+export const formatShortDate = (dateKey: string): string => {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return `${DAYS[date.getDay()]} ${d} ${MONTHS[m - 1]}`;
+};
+
 /** "Today", "Tomorrow" or a short date such as "Fri 20 Nov", with Arabic where it is a word. */
 export const formatSpecialPrayerDay = (dateKey: string, now: Date): {en: string; ar: string} => {
   const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -119,7 +126,5 @@ export const formatSpecialPrayerDay = (dateKey: string, now: Date): {en: string;
   if (dateKey === toDateKey(tomorrow)) {
     return {en: 'Tomorrow', ar: 'غدًا'};
   }
-  const [y, m, d] = dateKey.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  return {en: `${DAYS[date.getDay()]} ${d} ${MONTHS[m - 1]}`, ar: ''};
+  return {en: formatShortDate(dateKey), ar: ''};
 };

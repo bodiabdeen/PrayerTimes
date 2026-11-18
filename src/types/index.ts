@@ -133,6 +133,17 @@ export interface AnnouncementsData {
 }
 
 /**
+ * One day's prayers for the Today | Tomorrow switch (v1.6)
+ */
+export interface DayView {
+  dateKey: string; // 'YYYY-MM-DD'
+  label: string; // 'Thu 19 Nov'
+  gregorianDate: string; // 'Thursday, 19 November 2026'
+  hijriDate: string; // '9 Jumada II 1448 AH'
+  prayers: Prayer[];
+}
+
+/**
  * Combined data from all sources
  */
 export interface CombinedPrayerData {
@@ -143,6 +154,7 @@ export interface CombinedPrayerData {
   lastUpdated: string;
   nextPrayer?: Prayer | null;
   apiConfig?: ApiConfig; // For displaying location/method info
+  tomorrow?: DayView | null; // v1.6: tomorrow's prayers (optional, so older cached data still loads)
 }
 
 /**

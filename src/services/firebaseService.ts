@@ -16,16 +16,16 @@ import {
   getDoc,
 } from '@react-native-firebase/firestore';
 import { getApps } from '@react-native-firebase/app';
-import { FIREBASE_CONFIG, PRAYER_NAMES } from '../utils/constants';
-import { ApiConfig, DailyConfig, AnnouncementsData, CombinedPrayerData, Prayer, SpecialPrayerItem } from '../types';
-import { buildSpecialPrayerRows, parseSpecialPrayers } from '../utils/specialPrayers';
+import { FIREBASE_CONFIG } from '../utils/constants';
+import { ApiConfig, DailyConfig, AnnouncementsData, CombinedPrayerData, DayView, SpecialPrayerItem } from '../types';
+import { formatShortDate, parseSpecialPrayers, toDateKey } from '../utils/specialPrayers';
+import { buildDayPrayers, FallbackRules, ScheduledPrayerTimes } from '../utils/dayPrayers';
 import {
   fetchPrayerTimesFromAladhan,
   convertAladhanTimings,
   formatAladhanGregorianDate,
   formatAladhanHijriDate,
 } from './aladhanService';
-import { applyTimeOffset } from '../utils/dateUtils';
 import { getNextPrayer } from '../utils/prayerUtils';
 
 export type MenuLink = {
@@ -35,28 +35,8 @@ export type MenuLink = {
   icon: string;
 };
 
-// Per-prayer fallback offsets fetched from Firebase fallbackRules document
-type PrayerFallbackRule = {
-  matOffset: number; // Minutes to add to APT when MAT is still empty after all checks
-  mitOffset: number; // Minutes to add to MAT when MIT is still empty after all checks
-};
-
-type FallbackRules = {
-  fajr: PrayerFallbackRule;
-  dhuhr: PrayerFallbackRule;
-  asr: PrayerFallbackRule;
-  maghrib: PrayerFallbackRule;
-  isha: PrayerFallbackRule;
-};
-
-// Per-prayer scheduled values for a specific date
-type ScheduledPrayerTimes = {
-  fajr:    { mat: string; mit: string };
-  dhuhr:   { mat: string; mit: string };
-  asr:     { mat: string; mit: string };
-  maghrib: { mat: string; mit: string };
-  isha:    { mat: string; mit: string };
-};
+// v1.6: the fallback rule and scheduled-time types live in src/utils/dayPrayers.ts,
+// together with the rules that build one day's prayer list (used for today and tomorrow).
 
 // Safe defaults used if fallbackRules document is missing
 const DEFAULT_FALLBACK_RULES: FallbackRules = {
@@ -65,21 +45,6 @@ const DEFAULT_FALLBACK_RULES: FallbackRules = {
   asr:     { matOffset: 0, mitOffset: 5 },
   maghrib: { matOffset: 0, mitOffset: 5 },
   isha:    { matOffset: 0, mitOffset: 5 },
-};
-
-/**
- * Returns today's date key in YYYY-MM-DD format using local device time.
- */
-const getTodayKey = (): string => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-
-/**
- * Returns true only if a time string is a valid, non-empty, non-zero time.
- */
-const isValidTime = (t: string | undefined | null): boolean => {
-  return !!t && t !== '' && t !== '00:00';
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -238,12 +203,14 @@ export const fetchDailyConfig = async (): Promise<DailyConfig | null> => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────
-// Fetch scheduled times for today  (prayerTimes/scheduledTimes)
+// Fetch scheduled times  (prayerTimes/scheduledTimes)
 // ★ Used by: new app ONLY
 //   The old installed app never calls this function and never reads this
 //   Firestore document. Publishing the new app does not affect live users.
+// v1.6: returns every date's entry ("YYYY-MM-DD" → times), so today and
+//   tomorrow are read in one go. Missing dates simply fall back to daily config.
 // ─────────────────────────────────────────────────────────────────────────
-export const fetchScheduledTimesForToday = async (): Promise<ScheduledPrayerTimes | null> => {
+export const fetchScheduledTimes = async (): Promise<Record<string, ScheduledPrayerTimes> | null> => {
   try {
     const db = getFirestore();
     const docSnap = await getDoc(doc(db, FIREBASE_CONFIG.COLLECTION, FIREBASE_CONFIG.DOCUMENTS.SCHEDULED_TIMES));
@@ -254,16 +221,7 @@ export const fetchScheduledTimesForToday = async (): Promise<ScheduledPrayerTime
     }
 
     const all = docSnap.data();
-    const todayKey = getTodayKey();
-    const todayEntry = all?.[todayKey];
-
-    if (!todayEntry) {
-      console.log(`📅 No scheduled entry for today (${todayKey}) — using daily config`);
-      return null;
-    }
-
-    console.log(`✅ Scheduled times found for today (${todayKey})`);
-    return todayEntry as ScheduledPrayerTimes;
+    return (all ?? null) as Record<string, ScheduledPrayerTimes> | null;
   } catch (error) {
     // Non-fatal: if this fails, the app falls back gracefully to dailyConfig
     console.error('❌ Error fetching scheduled times (falling back to daily config):', error);
@@ -357,134 +315,63 @@ export const fetchAllPrayerData = async (): Promise<CombinedPrayerData | null> =
     );
     if (!aladhanData) throw new Error('Failed to fetch prayer times from Aladhan');
 
-    const aptTimings = convertAladhanTimings(aladhanData.timings);
-    const apt = {
-      fajr:    applyTimeOffset(aptTimings.fajr,    apiConfig.offsetMinutes.fajr),
-      sunrise: aptTimings.sunrise,
-      dhuhr:   applyTimeOffset(aptTimings.dhuhr,   apiConfig.offsetMinutes.dhuhr),
-      asr:     applyTimeOffset(aptTimings.asr,     apiConfig.offsetMinutes.asr),
-      maghrib: applyTimeOffset(aptTimings.maghrib, apiConfig.offsetMinutes.maghrib),
-      isha:    applyTimeOffset(aptTimings.isha,    apiConfig.offsetMinutes.isha),
-    };
-
     // 3. Daily config (② priority)
     const dailyConfig = await fetchDailyConfig();
     if (!dailyConfig) throw new Error('Failed to fetch daily config');
 
-    // 4. Scheduled times for today (① priority — new app only)
-    //    Returns null if no entry exists for today, which is the common case.
+    // 4. Scheduled times (① priority — new app only), today's and tomorrow's entries.
+    //    Usually there is no entry for a date, which is the common case.
     //    Failure here is non-fatal and silently falls back to dailyConfig.
-    const scheduled = await fetchScheduledTimesForToday();
+    const scheduledAll = await fetchScheduledTimes();
+    const todayKey = toDateKey(today);
+    const tomorrowDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const tomorrowKey = toDateKey(tomorrowDate);
 
     // 5. Fallback rules (③ priority)
-    const fallbackRules = await fetchFallbackRules();
+    const fallbackRules: FallbackRules = await fetchFallbackRules();
 
     // 6. Announcements
     const announcementsData = await fetchAnnouncements() || { list: [], lastUpdated: null };
 
-    // ── Resolve MAT/MIT for each prayer ──────────────────────────────────
-    //
-    //  Priority:
-    //    ① scheduled[prayer].mat/mit  (non-empty)
-    //    ② dailyConfig.mat/mit[prayer] (non-empty)
-    //    ③ APT + fallbackRules[prayer].matOffset / mitOffset
-    //
-    const buildPrayer = (
-      prayerKey: string,
-      aptTime: string,
-      dailyMat: string,
-      dailyMit: string,
-      schedMat: string | undefined,
-      schedMit: string | undefined,
-      rules: PrayerFallbackRule,
-    ): Prayer => {
-      // Resolve MAT: scheduled first, then daily, then APT+offset
-      const resolvedMat = isValidTime(schedMat)  ? schedMat!
-                        : isValidTime(dailyMat)   ? dailyMat
-                        : applyTimeOffset(aptTime, rules.matOffset);
-
-      // Resolve MIT: scheduled first, then daily, then resolvedMAT+offset
-      const resolvedMit = isValidTime(schedMit)  ? schedMit!
-                        : isValidTime(dailyMit)   ? dailyMit
-                        : applyTimeOffset(resolvedMat, rules.mitOffset);
-
-      return {
-        name:      PRAYER_NAMES[prayerKey as keyof typeof PRAYER_NAMES].en,
-        nameArabic: PRAYER_NAMES[prayerKey as keyof typeof PRAYER_NAMES].ar,
-        apt:       aptTime,
-        mat:       resolvedMat,
-        mit:       resolvedMit,
-        isNext:    false,
-      };
-    };
-
-    const prayers: Prayer[] = [
-      buildPrayer('fajr',    apt.fajr,    dailyConfig.mat.fajr,    dailyConfig.mit.fajr,    scheduled?.fajr?.mat,    scheduled?.fajr?.mit,    fallbackRules.fajr),
-      {
-        name: PRAYER_NAMES.sunrise.en,
-        nameArabic: PRAYER_NAMES.sunrise.ar,
-        apt: apt.sunrise, mat: '--:--', mit: '--:--', isNext: false,
-      },
-      buildPrayer('dhuhr',   apt.dhuhr,   dailyConfig.mat.dhuhr,   dailyConfig.mit.dhuhr,   scheduled?.dhuhr?.mat,   scheduled?.dhuhr?.mit,   fallbackRules.dhuhr),
-      buildPrayer('asr',     apt.asr,     dailyConfig.mat.asr,     dailyConfig.mit.asr,     scheduled?.asr?.mat,     scheduled?.asr?.mit,     fallbackRules.asr),
-      buildPrayer('maghrib', apt.maghrib, dailyConfig.mat.maghrib, dailyConfig.mit.maghrib, scheduled?.maghrib?.mat, scheduled?.maghrib?.mit, fallbackRules.maghrib),
-      buildPrayer('isha',    apt.isha,    dailyConfig.mat.isha,    dailyConfig.mit.isha,    scheduled?.isha?.mat,    scheduled?.isha?.mit,    fallbackRules.isha),
-    ];
-
-    // Special prayers (not affected by scheduled times — use dailyConfig as before)
-    if (dailyConfig.specialPrayers.jumaa?.iqama) {
-      const idx = prayers.findIndex(p => p.name === PRAYER_NAMES.dhuhr.en);
-      if (idx !== -1) {
-        prayers.splice(idx + 1, 0, {
-          name: PRAYER_NAMES.jumaa.en, nameArabic: PRAYER_NAMES.jumaa.ar,
-          apt: '--:--', mat: dailyConfig.specialPrayers.jumaa.adhan,
-          mit: dailyConfig.specialPrayers.jumaa.iqama, isNext: false,
-        });
-      }
-    }
-
-    // 2nd Jumu'ah — optional, only shown when set in dailyConfig (new app only field)
-    if (dailyConfig.specialPrayers.jumaa2?.iqama) {
-      const jumaaIdx = prayers.findIndex(p => p.name === PRAYER_NAMES.jumaa.en);
-      const dhuhrIdx = prayers.findIndex(p => p.name === PRAYER_NAMES.dhuhr.en);
-      const insertAt = jumaaIdx !== -1 ? jumaaIdx + 1 : dhuhrIdx + 1;
-      if (insertAt !== -1) {
-        prayers.splice(insertAt, 0, {
-          name: PRAYER_NAMES.jumaa2.en, nameArabic: PRAYER_NAMES.jumaa2.ar,
-          apt: '--:--', mat: dailyConfig.specialPrayers.jumaa2.adhan,
-          mit: dailyConfig.specialPrayers.jumaa2.iqama, isNext: false,
-        });
-      }
-    }
-
-    if (dailyConfig.specialPrayers.taraweeh?.time) {
-      const idx = prayers.findIndex(p => p.name === PRAYER_NAMES.isha.en);
-      if (idx !== -1) {
-        prayers.splice(idx + 1, 0, {
-          name: PRAYER_NAMES.taraweeh.en, nameArabic: PRAYER_NAMES.taraweeh.ar,
-          apt: '--:--', mat: dailyConfig.specialPrayers.taraweeh.time,
-          mit: dailyConfig.specialPrayers.taraweeh.time, isNext: false, isSpecial: true,
-        });
-      }
-    }
-
-    if (dailyConfig.specialPrayers.eidFitr?.prayer1?.time) {
-      prayers.push({ name: `${PRAYER_NAMES.eidFitr.en} - Prayer 1`, nameArabic: `${PRAYER_NAMES.eidFitr.ar} - صلاة ١`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidFitr.prayer1.time, isNext: false, isSpecial: true });
-    }
-    if (dailyConfig.specialPrayers.eidFitr?.prayer2?.time) {
-      prayers.push({ name: `${PRAYER_NAMES.eidFitr.en} - Prayer 2`, nameArabic: `${PRAYER_NAMES.eidFitr.ar} - صلاة ٢`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidFitr.prayer2.time, isNext: false, isSpecial: true });
-    }
-    if (dailyConfig.specialPrayers.eidAdha?.prayer1?.time) {
-      prayers.push({ name: `${PRAYER_NAMES.eidAdha.en} - Prayer 1`, nameArabic: `${PRAYER_NAMES.eidAdha.ar} - صلاة ١`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidAdha.prayer1.time, isNext: false, isSpecial: true });
-    }
-    if (dailyConfig.specialPrayers.eidAdha?.prayer2?.time) {
-      prayers.push({ name: `${PRAYER_NAMES.eidAdha.en} - Prayer 2`, nameArabic: `${PRAYER_NAMES.eidAdha.ar} - صلاة ٢`, apt: '--:--', mat: '--:--', mit: dailyConfig.specialPrayers.eidAdha.prayer2.time, isNext: false, isSpecial: true });
-    }
-
-    // v1.6: special prayers created by the admin, after the built-in special prayers.
-    // They have no APT, so they never become the "next prayer", the widget or the countdown.
+    // 7. v1.6: special prayers created by the admin (never fatal)
     const specialPrayers = await fetchSpecialPrayers();
-    prayers.push(...buildSpecialPrayerRows(specialPrayers, new Date()));
+
+    // ── Today's prayers (rules in src/utils/dayPrayers.ts) ───────────────
+    const prayers = buildDayPrayers({
+      rawTimes: convertAladhanTimings(aladhanData.timings),
+      offsets: apiConfig.offsetMinutes,
+      dailyConfig,
+      scheduled: scheduledAll?.[todayKey],
+      fallbackRules,
+      specialPrayers,
+      now: today,
+    });
+
+    // ── v1.6: tomorrow's prayers, for the Today | Tomorrow switch (never fatal) ──
+    let tomorrow: DayView | null = null;
+    const tomorrowAladhan = await fetchPrayerTimesFromAladhan(
+      tomorrowDate,
+      apiConfig.method,
+      apiConfig.latitude,
+      apiConfig.longitude
+    );
+    if (tomorrowAladhan) {
+      tomorrow = {
+        dateKey: tomorrowKey,
+        label: formatShortDate(tomorrowKey), // e.g. "Thu 19 Nov"
+        gregorianDate: formatAladhanGregorianDate(tomorrowAladhan.date),
+        hijriDate: formatAladhanHijriDate(tomorrowAladhan.date),
+        prayers: buildDayPrayers({
+          rawTimes: convertAladhanTimings(tomorrowAladhan.timings),
+          offsets: apiConfig.offsetMinutes,
+          dailyConfig,
+          scheduled: scheduledAll?.[tomorrowKey],
+          fallbackRules,
+          specialPrayers: specialPrayers.filter(item => item.date === tomorrowKey),
+          now: today,
+        }),
+      };
+    }
 
     // Mark next prayer
     const nextPrayer = getNextPrayer(prayers);
@@ -498,6 +385,7 @@ export const fetchAllPrayerData = async (): Promise<CombinedPrayerData | null> =
       lastUpdated:   new Date().toISOString(),
       nextPrayer,
       apiConfig,
+      tomorrow,
     };
 
     console.log('✅ All prayer data combined successfully');
