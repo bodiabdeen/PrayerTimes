@@ -1,0 +1,45 @@
+# State: PrayerTimes app
+
+Branch `iom/v1.6`, created on 18 November 2026 from `iom/release/v1.5`, which is the published 1.5 code (Android versionCode 20, target SDK 36). Nothing has been pushed.
+
+## Done on this branch
+
+* **Security housekeeping**: the Play upload keystore (`android/app/iom-upload.jks`), its passwords (`android/keystore.properties`) and `android/Untitled.jks` are no longer tracked. `Untitled.jks` is a byte-for-byte copy of the upload key, and has been on every branch of the public GitHub repository since the v1.0 release. All three files stay on disk for local release builds and are now ignored. Also removed: five empty junk files in the root and the `android/app/release` build outputs.
+* **Special prayers** (from the new Firestore document `prayerTimes/specialPrayers`, created in the admin panel v2):
+  * They appear as special prayer cards after the built-in ones (Jumu'ah, Taraweeh, Eid). The label above the time reads "Today / اليوم", "Tomorrow / غدًا" or a date.
+  * Each shows only between its "show from" and "hide after" times; the list re-checks every minute.
+  * They never become the next prayer, never reach the home screen widgets, and get no notifications.
+  * If the document is missing or cannot be read, the app behaves exactly like 1.5.
+  * The rules live in `src/utils/specialPrayers.ts`, with 13 unit tests.
+* **Gentle animations** (`src/components/motion.tsx`):
+  * Prayer cards fade up once when they first appear.
+  * The next prayer's card has a slow breathing glow.
+  * The countdown's prayer name fades in when it changes.
+  * In the last five minutes the countdown turns warm and pulses slowly.
+  * All of these are skipped when the phone's "Reduce motion" setting is on.
+
+## Decisions
+
+* Notifications for special prayers are deliberately not added: Taraweeh and Eid have none either, and the owner has not decided (improvement plan D9).
+* Version numbers are not bumped on this branch. Before uploading: Android versionCode 21 and versionName 1.6; iOS MARKETING_VERSION 1.6 and a new build number.
+
+## Tested (18 November 2026)
+
+* `npx tsc --noEmit`: the same 5 errors as the v1.5 baseline, none added.
+* `npx jest __tests__/specialPrayers.test.ts`: 13 of 13 passed.
+* ESLint on the changed files: the same 6 findings as the original files, none added.
+* Release JavaScript bundles build for Android and iOS.
+* Not yet run on an emulator or a device (the owner tests).
+
+## How to test (owner)
+
+1. `npm ci` (this machine's `node_modules` is still on React Native 0.83.1, while the release branch uses 0.83.10).
+2. Android: `npx react-native run-android` on an emulator. iOS: on the Mac, `cd ios && pod install`, then run on a simulator.
+3. In the admin panel v2 (backend branch `iombe/v1.6`), add a special prayer for today. Pull to refresh in the app: it appears under the other special prayers with "Today / اليوم". Delete it and refresh: it disappears. Published 1.5 apps never show it.
+
+## Open (owner)
+
+* Reset the Play upload key in Play Console (App integrity, App signing, "Request upload key reset"). The old key and its passwords are public in the repository history.
+* Questions about combining the watch apps into this app's store listings are answered in the conversation of 18 November 2026; no watch work has started.
+* `@notifee/react-native` (all athan and iqama alerts) was archived in April 2026.
+* Related branches: backend `iombe/v1.6`, TV and website `pttv/v1.6`.
