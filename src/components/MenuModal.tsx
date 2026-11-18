@@ -33,7 +33,7 @@ export const MenuModal: React.FC<MenuModalProps> = ({
   onRefresh,
   onAthanSettings,
 }) => {
-  const {isDark, toggleTheme, theme, timeFormat, toggleTimeFormat} = useTheme();
+  const {isDark, toggleTheme, theme, timeFormat, toggleTimeFormat, look, toggleLook} = useTheme();
   const [menuLinks, setMenuLinks] = useState<MenuLink[]>([]);
 
   useEffect(() => {
@@ -89,6 +89,17 @@ export const MenuModal: React.FC<MenuModalProps> = ({
                 <Text style={styles.icon}>🕐</Text>
                 <Text style={[styles.menuText, {color: theme.text}]}>
                   {timeFormat === '24h' ? '24 Hour Format' : '12 Hour Format'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* v2.0: switch between the Classic and Emerald looks */}
+              <TouchableOpacity
+                style={styles.menuItem}
+                accessibilityHint="Switches between the Classic and Emerald looks"
+                onPress={() => { toggleLook(); onClose(); }}>
+                <Text style={styles.icon}>🎨</Text>
+                <Text style={[styles.menuText, {color: theme.text}]}>
+                  {look === 'emerald' ? 'Look: Emerald' : 'Look: Classic'}
                 </Text>
               </TouchableOpacity>
 

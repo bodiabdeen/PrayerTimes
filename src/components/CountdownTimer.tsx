@@ -4,20 +4,56 @@ import {useTheme} from '../contexts/ThemeContext';
 import {Prayer} from '../types';
 import {UPDATE_INTERVAL} from '../utils/constants';
 import {getNextPrayer} from '../utils/prayerUtils';
+import {splitPrayerName} from '../utils/prayerNames';
+import {EmeraldExtras} from '../styles/colors';
 import {useReduceMotion} from './motion';
+import {ProgressRing} from './ProgressRing';
 
 // v1.6: in the last five minutes the countdown takes a warm tint and pulses slowly
 const SOON_MS = 5 * 60 * 1000;
+const pad2 = (n: number) => n.toString().padStart(2, '0');
 
 interface CountdownTimerProps {
   nextPrayer: Prayer | null;
   prayers: Prayer[];
   onNextPrayerChange?: (prayer: Prayer | null) => void;
+  /** v2.0: 'emerald' shows the date, a ring and the next prayer together at the top */
+  variant?: 'classic' | 'emerald';
+  gregorianDate?: string;
+  hijriDate?: string;
 }
 
-export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initialNextPrayer, prayers, onNextPrayerChange}) => {
-  const {theme} = useTheme();
+/** Start time of the latest main prayer before `now` (last night's Isha before Fajr), for the ring. */
+const previousStart = (prayers: Prayer[], now: Date): Date | null => {
+  const starts = prayers
+    .filter(p => !p.isSpecial && !p.isCustom && p.apt && p.apt !== '--:--' && !/^Sunrise/i.test(p.name))
+    .map(p => {
+      const [h, m] = p.apt.split(':').map(Number);
+      const d = new Date(now);
+      d.setHours(h, m, 0, 0);
+      return d;
+    })
+    .filter(d => !isNaN(d.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+  if (starts.length === 0) {
+    return null;
+  }
+  const past = starts.filter(d => d <= now);
+  return past.length > 0 ? past[past.length - 1] : new Date(starts[starts.length - 1].getTime() - 24 * 3600 * 1000);
+};
+
+export const CountdownTimer: React.FC<CountdownTimerProps> = ({
+  nextPrayer: initialNextPrayer,
+  prayers,
+  onNextPrayerChange,
+  variant = 'classic',
+  gregorianDate,
+  hijriDate,
+}) => {
+  const {theme, isDark, formatTime} = useTheme();
   const [countdown, setCountdown] = useState<string>('--:--:--');
+  const [ringText, setRingText] = useState<string>('--:--:--');
+  const [progress, setProgress] = useState(0);
   const [currentNextPrayer, setCurrentNextPrayer] = useState<Prayer | null>(initialNextPrayer);
   const [isSoon, setIsSoon] = useState(false);
 
@@ -137,6 +173,13 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
         setCountdown(
           `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`
         );
+        setRingText(`${pad2(h)}:${pad2(m)}:${pad2(s)}`);
+
+        // v2.0 Emerald ring: how far we are from the previous prayer to this one
+        const prev = previousStart(prayers, now);
+        if (prev && target.getTime() > prev.getTime()) {
+          setProgress((now.getTime() - prev.getTime()) / (target.getTime() - prev.getTime()));
+        }
       } catch (error) {
         console.error('Error calculating countdown:', error);
         setCountdown('--:--:--');
@@ -199,6 +242,42 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({nextPrayer: initi
     return prayerName;
   };
 
+  if (variant === 'emerald') {
+    const extras = EmeraldExtras[isDark ? 'dark' : 'light'];
+    const arabic = splitPrayerName(currentNextPrayer?.name).ar;
+    const begins = currentNextPrayer?.apt && currentNextPrayer.apt !== '--:--' ? formatTime(currentNextPrayer.apt) : null;
+    const iqama = currentNextPrayer?.mit && currentNextPrayer.mit !== '--:--' ? formatTime(currentNextPrayer.mit) : null;
+    return (
+      <View style={[emerald.hero, {backgroundColor: extras.heroBackground}]}>
+        <View style={emerald.dateRow}>
+          {gregorianDate ? <Text style={emerald.date}>{gregorianDate}</Text> : null}
+          {hijriDate ? <Text style={[emerald.hijri, {color: extras.mint}]}>{hijriDate}</Text> : null}
+        </View>
+        <View style={emerald.row}>
+          <ProgressRing size={124} stroke={9} progress={progress} color={theme.accent} trackColor={extras.ringTrack}>
+            <Animated.Text
+              style={[emerald.ringTime, isSoon ? emerald.ringSoon : null, {opacity: countdownOpacity}]}>
+              {ringText}
+            </Animated.Text>
+            <Text style={emerald.ringLabel}>to go</Text>
+          </ProgressRing>
+          <View style={emerald.info}>
+            <Text style={[emerald.label, {color: extras.mint}]}>NEXT PRAYER / الصلاة القادمة</Text>
+            <Animated.Text style={[emerald.name, {opacity: nameOpacity}]} numberOfLines={1} adjustsFontSizeToFit>
+              {getNextPrayerLabel()}
+            </Animated.Text>
+            {arabic ? <Text style={emerald.arabic}>{arabic}</Text> : null}
+            {begins ? (
+              <Text style={emerald.times}>
+                {iqama ? `Begins ${begins} · Iqama ${iqama}` : `Begins ${begins}`}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={[
       styles.container,
@@ -249,5 +328,77 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     letterSpacing: 2,
+  },
+});
+
+// v2.0 Emerald look
+const emerald = StyleSheet.create({
+  hero: {
+    marginBottom: 12,
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    paddingBottom: 22,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    gap: 14,
+  },
+  dateRow: {
+    alignItems: 'flex-start',
+    gap: 2,
+  },
+  date: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    opacity: 0.9,
+  },
+  hijri: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  ringTime: {
+    color: '#FFFFFF',
+    fontSize: 19,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  ringSoon: {
+    color: '#F2A65A',
+  },
+  ringLabel: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    opacity: 0.75,
+    marginTop: 1,
+  },
+  info: {
+    flex: 1,
+    gap: 2,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  name: {
+    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: '700',
+  },
+  arabic: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    opacity: 0.9,
+    textAlign: 'left',
+  },
+  times: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    opacity: 0.85,
+    marginTop: 4,
   },
 });

@@ -60,8 +60,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // VERSION UPDATE: 1.5 (Build 20)
-        versionCode 20
-        versionName "1.5"
+        versionCode 21
+        versionName "2.0"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", (findProperty("newArchEnabled") ?: "true").toBoolean().toString()
         buildConfigField "boolean", "IS_HERMES_ENABLED", "(findProperty('hermesEnabled') ?: 'true').toBoolean()"
         ndk {

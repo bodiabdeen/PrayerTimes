@@ -45,7 +45,7 @@ const WHATS_NEW_VERSION = '1.3.0';
 const WHATS_NEW_KEY = `@whats_new_shown_${WHATS_NEW_VERSION}`;
 
 function AppContent(): React.JSX.Element {
-  const {theme} = useTheme();
+  const {theme, look} = useTheme();
   const insets = useSafeAreaInsets();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -302,11 +302,17 @@ function AppContent(): React.JSX.Element {
             colors={[theme.accent]}
           />
         }>
-        <DateDisplay gregorianDate={prayerData.gregorianDate} hijriDate={prayerData.hijriDate} />
+        {/* v2.0: the Emerald look shows the date inside the countdown panel */}
+        {look === 'emerald' ? null : (
+          <DateDisplay gregorianDate={prayerData.gregorianDate} hijriDate={prayerData.hijriDate} />
+        )}
         <CountdownTimer
           nextPrayer={currentNextPrayer}
           prayers={prayerData.prayers}
           onNextPrayerChange={handleNextPrayerChange}
+          variant={look}
+          gregorianDate={prayerData.gregorianDate}
+          hijriDate={prayerData.hijriDate}
         />
         {prayerData.tomorrow ? (
           <DayToggle
@@ -317,9 +323,15 @@ function AppContent(): React.JSX.Element {
         ) : null}
         {dayChoice === 'tomorrow' && prayerData.tomorrow ? (
           // key: switching days replays the gentle entrance of the cards
-          <PrayerTimesTable key="tomorrow" prayers={prayerData.tomorrow.prayers} nextPrayerName={null} />
+          <PrayerTimesTable key={`tomorrow-${look}`} prayers={prayerData.tomorrow.prayers} nextPrayerName={null} variant={look} />
         ) : (
-          <PrayerTimesTable key="today" prayers={prayerData.prayers} nextPrayerName={currentNextPrayer?.name || null} />
+          <PrayerTimesTable
+            key={`today-${look}`}
+            prayers={prayerData.prayers}
+            nextPrayerName={currentNextPrayer?.name || null}
+            variant={look}
+            dimPast
+          />
         )}
         <ConfigInfo config={prayerData.apiConfig || null} />
         <View style={{height: 72}} />

@@ -3,18 +3,40 @@ import {View, Text, StyleSheet} from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 import {Prayer} from '../types';
 import {formatSpecialPrayerDay, isSpecialPrayerVisible} from '../utils/specialPrayers';
+import {splitPrayerName} from '../utils/prayerNames';
+import {EmeraldExtras} from '../styles/colors';
 import {BreathingHighlight, FadeInView} from './motion';
 
 interface PrayerTimesTableProps {
   prayers: Prayer[];
   nextPrayerName: string | null;
+  /** v2.0: 'emerald' shows one row per prayer with the column names once at the top */
+  variant?: 'classic' | 'emerald';
+  /** v2.0 Emerald: fade prayers that have already started today */
+  dimPast?: boolean;
 }
+
+const EMERALD_COLUMNS = [
+  {en: 'Begins', ar: 'الوقت'},
+  {en: 'Adhan', ar: 'الأذان'},
+  {en: 'Iqama', ar: 'الإقامة'},
+];
+
+const minutesOf = (time?: string): number | null => {
+  if (!time || time === '--:--') {
+    return null;
+  }
+  const [h, m] = time.split(':').map(Number);
+  return isNaN(h) || isNaN(m) ? null : h * 60 + m;
+};
 
 export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
   prayers,
   nextPrayerName,
+  variant = 'classic',
+  dimPast = false,
 }) => {
-  const {theme, formatTime} = useTheme();
+  const {theme, formatTime, isDark} = useTheme();
 
   // v1.6: re-check every minute which admin special prayers should be visible
   const [now, setNow] = useState(() => new Date());
@@ -45,6 +67,67 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
     {en: 'Masjid Adhan', ar: 'أذان المسجد'},
     {en: 'Masjid Iqama', ar: 'إقامة المسجد'},
   ];
+
+  if (variant === 'emerald') {
+    const extras = EmeraldExtras[isDark ? 'dark' : 'light'];
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const cell = (time?: string) => (time && time !== '--:--' ? formatTime(time) : '');
+    return (
+      <View style={emerald.container}>
+        <View style={emerald.headerRow}>
+          <View style={emerald.nameCol} />
+          {EMERALD_COLUMNS.map(c => (
+            <View key={c.en} style={emerald.timeCol}>
+              <Text style={[emerald.headerText, {color: theme.textSecondary}]}>{c.en.toUpperCase()}</Text>
+              <Text style={[emerald.headerArabic, {color: theme.textSecondary}]}>{c.ar}</Text>
+            </View>
+          ))}
+        </View>
+        {visiblePrayers.map((prayer, index) => {
+          const isNext = !prayer.isCustom && prayer.name === nextPrayerName;
+          const name = splitPrayerName(prayer.name);
+          const started = minutesOf(prayer.apt) ?? minutesOf(prayer.mit);
+          const past = dimPast && !isNext && !prayer.isCustom && started !== null && started < nowMinutes;
+          const timeColor = isNext ? theme.accent : theme.text;
+          return (
+            <FadeInView
+              key={prayer.isCustom ? `custom-${prayer.customId}` : prayer.name}
+              delay={Math.min(index, 10) * 60}
+              style={[
+                emerald.row,
+                {
+                  backgroundColor: isNext ? extras.nextRow : theme.cardBackground,
+                  borderColor: isNext ? theme.nextPrayerBorder : theme.cardBorder,
+                },
+              ]}>
+              {isNext && <BreathingHighlight color={theme.accent} radius={16} />}
+              {/* The fade for prayers that have started sits inside: FadeInView animates the row's own opacity */}
+              <View style={[emerald.inner, past && emerald.past]}>
+              <View style={emerald.nameCol}>
+                <Text style={[emerald.name, {color: theme.text}]} numberOfLines={1}>{name.en || name.ar}</Text>
+                {name.en && name.ar ? (
+                  <Text style={[emerald.arabic, {color: theme.textSecondary}]}>{name.ar}</Text>
+                ) : null}
+                {prayer.isCustom && prayer.date ? (
+                  <Text style={[emerald.dayLabel, {color: theme.accent}]}>{dayLabel(prayer.date)}</Text>
+                ) : null}
+              </View>
+              {prayer.isSpecial ? (
+                <Text style={[emerald.specialTime, {color: timeColor}]}>{cell(prayer.mit) || '--:--'}</Text>
+              ) : (
+                <>
+                  <Text style={[emerald.time, {color: timeColor}]}>{cell(prayer.apt)}</Text>
+                  <Text style={[emerald.time, {color: timeColor}]}>{cell(prayer.mat)}</Text>
+                  <Text style={[emerald.time, {color: timeColor}]}>{cell(prayer.mit)}</Text>
+                </>
+              )}
+              </View>
+            </FadeInView>
+          );
+        })}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -147,6 +230,80 @@ export const PrayerTimesTable: React.FC<PrayerTimesTableProps> = ({
     </View>
   );
 };
+
+// v2.0 Emerald look
+const emerald = StyleSheet.create({
+  container: {
+    paddingHorizontal: 14,
+    gap: 7,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 14,
+    marginBottom: 1,
+  },
+  headerText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textAlign: 'center',
+  },
+  headerArabic: {
+    fontSize: 10.5,
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  inner: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  past: {
+    opacity: 0.5,
+  },
+  nameCol: {
+    flex: 1.35,
+  },
+  timeCol: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  arabic: {
+    fontSize: 13,
+    textAlign: 'left',
+  },
+  dayLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  time: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  specialTime: {
+    flex: 3,
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'right',
+    paddingRight: 8,
+    fontVariant: ['tabular-nums'],
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
