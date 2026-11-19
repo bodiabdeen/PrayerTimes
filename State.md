@@ -59,3 +59,9 @@ Branch `iom/release/v2.0`, created on 18 November 2026 from `iom/release/v1.5`, 
 * `docs/MAC_PROMPT.md` asks for the same colours on the Apple Watch.
 * Checked: `tsc` 5 errors (baseline), 17 of 17 tests, ESLint on the file unchanged (1 error before and after). Not yet run on a device.
 
+## Branch `iom/v2.0-watch-announce` (19 November 2026, from `iom/v2.0-ring-colours`)
+
+* The 2.0 "What's New" pop-up has an Android-only entry announcing the Wear OS watch app, its tile and its "Next prayer" complication.
+* Owner decision: the phone app 2.0 and the Wear OS watch app are published **together**, so the announcement is true on day one.
+* **The publisher's WhatsApp message (sent when everything is finished) must include the watch app**: repository `iom-prayertimes-samsung`, the latest watch branch (`v2.0-tile` at the time of writing), `./gradlew :wear:bundleRelease` signed with the phone app's upload key (after the upload key reset), the Wear OS form factor added once in Play Console, release on the Wear OS track at the same time as the phone release, and Wear OS screenshots for the listing.
+

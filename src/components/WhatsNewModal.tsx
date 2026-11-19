@@ -54,6 +54,13 @@ const FEATURES = [
     platform: 'android',
   },
   {
+    icon: '⌚',
+    title: 'New: Wear OS watch app',
+    description:
+      'Have a Wear OS watch, such as a Samsung Galaxy Watch? Get prayer times on your wrist: a watch app, a tile (swipe from your watch face) and a "Next prayer" complication for your watch face. Install it from the Play Store on your watch.',
+    platform: 'android',
+  },
+  {
     icon: '📱',
     title: 'New home screen widget',
     description:
