@@ -65,3 +65,41 @@ Branch `iom/release/v2.0`, created on 18 November 2026 from `iom/release/v1.5`, 
 * Owner decision: the phone app 2.0 and the Wear OS watch app are published **together**, so the announcement is true on day one.
 * **The publisher's WhatsApp message (sent when everything is finished) must include the watch app**: repository `iom-prayertimes-samsung`, the latest watch branch (`v2.0-tile` at the time of writing), `./gradlew :wear:bundleRelease` signed with the phone app's upload key (after the upload key reset), the Wear OS form factor added once in Play Console, release on the Wear OS track at the same time as the phone release, and Wear OS screenshots for the listing.
 
+
+## Apple Watch app and Classic widgets removed (19 November 2026, on `iom/release/v2.0`)
+
+`iom/release/v2.0` now also holds the work of `iom/v2.0-emerald-default`, `iom/v2.0-ring-colours` and `iom/v2.0-watch-announce`.
+
+### Apple Watch app
+
+* Two new targets in the iOS project: `IOMPrayerWatch` (watch app, `com.iomprayertimes.watchkitapp`) and `IOMPrayerWatchWidgets` (complications, `com.iomprayertimes.watchkitapp.widgets`). watchOS 11 or later, version 2.0, build 16. The watch app is embedded in the iPhone app ("Embed Watch Content"), so it ships in the same App Store record.
+* It works on its own: it downloads `https://watchdata-lnqdoo43sa-nw.a.run.app/?days=7` on launch and about every 6 hours (background refresh), and keeps the last good week in the App Group `group.com.iomprayertimes.widget` (the watch's own container) for the complications. If a download fails, the stored week is kept.
+* Feed times are always read in `Europe/London`. Sunrise is listed but is never the next prayer.
+* Main screen: date and Hijri date, the time big in the middle, the next prayer ("Fajr in 6 h 21 min") with Begins and Iqama, and a thin ring round the screen edge from the previous prayer to the next. Amber `#F2A65A` under 3 minutes, red `#E5484D` under 1 minute. Scrolling down: today, Jumu'ah, visible special prayers, tomorrow. Emerald look as on the Wear OS watch.
+* Complications: circular (ring and time), rectangular ("Asr 13:50", "in 25 min", progress bar), inline and corner. The rectangular one is also the Smart Stack card, the Apple Watch counterpart of the Wear OS tile; it asks to move to the top of the stack in the 15 minutes before each prayer. Timeline entries at every prayer start, 15, 3 and 1 minute before.
+* Code: `ios/IOMPrayerWatch/`, `ios/IOMPrayerWatchWidgets/`, shared model and rules in `ios/IOMPrayerWatchShared/WatchFeed.swift`.
+* What's New (iOS only): "New: Apple Watch app".
+
+### Classic widgets removed (owner decision, 19 November 2026)
+
+* iOS: the Classic "Prayer Times" widget is gone; "Prayer Times (Emerald)" is the only widget. Its data model moved to `ios/widget/WidgetData.swift`.
+* Android: the Classic vertical (`PrayerTimesWidget`) and horizontal (`PrayerTimesWidgetHorizontal`) widgets are gone, with their layouts, provider XML, strings and `widget_background`. "Next prayer (Emerald)" and "Prayer day (Emerald)" remain. `WidgetModule` still saves the same data and refreshes only the Emerald widgets.
+* Anyone with a Classic widget on their home screen loses it after updating. The What's New widget entries now say the old widgets were replaced and how to add the new one.
+
+### Tested on the Mac (Mac mini 2018, macOS 15.8.3, Xcode 26.3)
+
+* `npx tsc --noEmit`: 5 errors (baseline). Jest: 17 of 17. ESLint on `WhatsNewModal.tsx`: clean. Android and iOS release bundles: built.
+* iPhone app (Release) built and run on the iPhone 17 simulator (iOS 26.3.1). Watch app built and run on the Apple Watch Series 11 (46mm) simulator (watchOS 26.2), paired with it, against the live feed.
+* Simulator problems that are not app bugs: emoji show as boxed question marks (Xcode 26.3 simulator bug, fixed in Xcode 26.4, which needs macOS 26 and cannot run on this Mac); the home screen (SpringBoard) crashes in its ripple animation when adding a widget, so the iPhone widget could not be placed on the simulator. Test the widget on a real iPhone.
+* Not tested here: the Android changes (no Android SDK on the Mac; build and run on Windows), and the complications on a watch face.
+* Mac tools are in the owner's home folder, not system wide: Node 22 in `~/.local/node`, Ruby 3.4 in `~/.local/ruby` (CocoaPods through `bundle exec pod install`). `ios/.xcode.env.local` points Xcode at that Node.
+
+### Publisher (App Store Connect and the developer account)
+
+* Register the App IDs `com.iomprayertimes.watchkitapp` and `com.iomprayertimes.watchkitapp.widgets`, both with the App Group `group.com.iomprayertimes.widget`.
+* Archive the iPhone app as usual; the watch app goes with it. Add Apple Watch screenshots to the 2.0 listing.
+
+### Open
+
+* Android: build and run on the emulator to check the Classic widgets are gone and the Emerald widgets still update.
+* iPhone and Apple Watch: try on real devices (widget, complications, Smart Stack).

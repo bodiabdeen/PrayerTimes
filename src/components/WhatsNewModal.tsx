@@ -50,7 +50,7 @@ const FEATURES = [
     icon: '📱',
     title: 'New home screen widgets',
     description:
-      'Two new Emerald widgets: "Next prayer" and "Prayer day". Touch and hold your home screen, tap Widgets, then find IOMPrayerTimes.',
+      'Two new Emerald widgets, "Next prayer" and "Prayer day", replace the old widgets. If you had a prayer times widget, add it again: touch and hold your home screen, tap Widgets, then find IOMPrayerTimes.',
     platform: 'android',
   },
   {
@@ -64,7 +64,14 @@ const FEATURES = [
     icon: '📱',
     title: 'New home screen widget',
     description:
-      'A new "Prayer Times (Emerald)" widget in small and medium sizes, and for the Lock Screen. Touch and hold your home screen, tap Edit, then Add Widget.',
+      'A new "Prayer Times (Emerald)" widget in small and medium sizes, and for the Lock Screen, replaces the old widget. If you had a prayer times widget, add it again: touch and hold your home screen, tap Edit, then Add Widget.',
+    platform: 'ios',
+  },
+  {
+    icon: '⌚',
+    title: 'New: Apple Watch app',
+    description:
+      'Have an Apple Watch? Get prayer times on your wrist: a clock with the next prayer and a countdown ring, complications for your watch face, and a card in the Smart Stack (turn the Digital Crown on your watch face). It may install by itself; if not, open the Watch app on your iPhone and install IOM Prayer Times under Available Apps.',
     platform: 'ios',
   },
 ];

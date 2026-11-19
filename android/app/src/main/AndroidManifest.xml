@@ -29,30 +29,7 @@
         </intent-filter>
       </activity>
       
-      <!-- Widget receivers -->
-      <receiver
-        android:name=".widget.PrayerTimesWidget"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-        </intent-filter>
-        <meta-data
-            android:name="android.appwidget.provider"
-            android:resource="@xml/prayer_times_widget_info" />
-      </receiver>
-      
-      <receiver
-        android:name=".widget.PrayerTimesWidgetHorizontal"
-        android:exported="true">
-        <intent-filter>
-            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-        </intent-filter>
-        <meta-data
-            android:name="android.appwidget.provider"
-            android:resource="@xml/prayer_times_widget_horizontal_info" />
-      </receiver>
-      
-      <!-- v2.0 Emerald widgets (the Classic ones above stay, so placed widgets keep their look) -->
+      <!-- Widget receivers: the Emerald widgets (the Classic widgets were removed in 2.0) -->
       <receiver
         android:name=".widget.EmeraldNextWidget"
         android:label="@string/emerald_next_widget_label"

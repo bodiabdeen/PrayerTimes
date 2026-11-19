@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">IOMPrayerTimes</string>
-    <string name="widget_description">Shows prayer times on your home screen</string>
-    <string name="horizontal_widget_description">Shows all prayer times horizontally (4x1)</string>
     <string name="emerald_next_widget_label">Next prayer (Emerald)</string>
     <string name="emerald_next_widget_description">The next prayer and the two after it, in the Emerald look</string>
     <string name="emerald_day_widget_label">Prayer day (Emerald)</string>

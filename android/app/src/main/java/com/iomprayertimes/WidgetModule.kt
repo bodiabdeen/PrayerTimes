@@ -10,7 +10,6 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
-import com.iomprayertimes.widget.PrayerTimesWidget
 import org.json.JSONObject
 
 class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -95,27 +94,7 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
             
             Log.d("WidgetModule", "Saved to SharedPreferences: ${json.toString()}")
             
-            // Trigger widget update for BOTH widgets
-            val intent = Intent(context, PrayerTimesWidget::class.java)
-            intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            val ids = AppWidgetManager.getInstance(context)
-                .getAppWidgetIds(ComponentName(context, PrayerTimesWidget::class.java))
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            context.sendBroadcast(intent)
-            
-            Log.d("WidgetModule", "Vertical widget update broadcast sent")
-            
-            // Update horizontal widget
-            val intentHorizontal = Intent(context, com.iomprayertimes.widget.PrayerTimesWidgetHorizontal::class.java)
-            intentHorizontal.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            val idsHorizontal = AppWidgetManager.getInstance(context)
-                .getAppWidgetIds(ComponentName(context, com.iomprayertimes.widget.PrayerTimesWidgetHorizontal::class.java))
-            intentHorizontal.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, idsHorizontal)
-            context.sendBroadcast(intentHorizontal)
-            
-            Log.d("WidgetModule", "Horizontal widget update broadcast sent")
-
-            // v2.0: Emerald widgets
+            // 2.0: the Classic widgets were removed; only the Emerald widgets remain.
             for (provider in listOf(
                 com.iomprayertimes.widget.EmeraldNextWidget::class.java,
                 com.iomprayertimes.widget.EmeraldDayWidget::class.java

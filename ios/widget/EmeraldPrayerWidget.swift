@@ -1,8 +1,8 @@
 import WidgetKit
 import SwiftUI
 
-// v2.0 Emerald widget. It sits beside the Classic "Prayer Times" widget (unchanged, so widgets
-// people already placed keep their look) and reads the same App Group data that WidgetModule saves.
+// v2.0 Emerald widget, the app's only home screen widget since the Classic one was removed in 2.0.
+// It reads the App Group data that WidgetModule saves (WidgetData.swift).
 // The timeline has an entry for each prayer still to come today, so the highlight moves on
 // without opening the app.
 
@@ -83,7 +83,7 @@ struct EmeraldProvider: TimelineProvider {
                 entries.append(entry(at: at, prayers: prayers))
             }
         }
-        // Ask again in 30 minutes, as the Classic widget does, to pick up new data.
+        // Ask again in 30 minutes to pick up new data.
         let refresh = Calendar.current.date(byAdding: .minute, value: 30, to: now)!
         completion(Timeline(entries: entries, policy: .after(refresh)))
     }
