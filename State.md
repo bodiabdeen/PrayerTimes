@@ -19,6 +19,14 @@ Branch `iom/release/v2.0`, created on 18 November 2026 from `iom/release/v1.5`, 
   * The home screen widgets and the notifications keep the Classic look.
 * **Version 2.0**: Android versionCode 21 and versionName 2.0; iOS MARKETING_VERSION 2.0 and build 16 (the iOS widget extension now matches the app; it was still 1.0 and 1).
 
+## Branch `iom/v2.0-emerald-default` (19 November 2026, from `iom/release/v2.0`)
+
+* **Emerald is the default look** (`DEFAULT_LOOK` in `src/contexts/ThemeContext.tsx`). A look someone already chose in the menu is kept; Classic is one tap away under Menu, "Look".
+* **Emerald home screen widgets**, added beside the Classic widgets (which are unchanged, so widgets already on people's home screens keep their look):
+  * Android (`android/app/src/main/java/com/iomprayertimes/widget/EmeraldWidgets.kt`): "Next prayer (Emerald)" (2x2: next prayer with Begins and Iqama, then the two after it) and "Prayer day (Emerald)" (4x1: all six times, the next one highlighted). They work out the next prayer from the clock and set an inexact alarm (no new permission) to redraw just after it begins.
+  * iOS (`ios/widget/EmeraldPrayerWidget.swift`, in the widget bundle): "Prayer Times (Emerald)" in small, medium and Lock Screen (rectangular) sizes, with a live countdown. The timeline has an entry after each prayer still to come today.
+* **What's New pop-up**: shows once per version (`WHATS_NEW_VERSION = '2.0'` in `src/components/WhatsNewModal.tsx`), with Android and iOS specific widget entries. Before this the check was commented out and the modal was not rendered. CLAUDE.md now asks for it to be updated with every new version.
+
 ## Decisions
 
 * Notifications for special prayers are deliberately not added: Taraweeh and Eid have none either, and the owner has not decided (improvement plan D9).

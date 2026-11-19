@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v2.0 Emerald "Prayer day" widget. Filled by EmeraldWidgets.kt. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/em_day_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_emerald_background"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="6dp">
+
+    <LinearLayout
+        android:id="@+id/em_day_fajr"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_emerald_cell"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <TextView
+            android:id="@+id/em_day_fajr_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="Fajr"
+            android:textColor="#93AAA6"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_fajr_apt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="06:09"
+            android:textColor="#EAF4F1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_fajr_mit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="06:30"
+            android:textColor="#93AAA6"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/em_day_sunrise"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_emerald_cell"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <TextView
+            android:id="@+id/em_day_sunrise_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="Sunrise"
+            android:textColor="#93AAA6"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_sunrise_apt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="08:18"
+            android:textColor="#EAF4F1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_sunrise_mit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="#93AAA6"
+            android:textSize="10sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/em_day_dhuhr"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_emerald_pill"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <TextView
+            android:id="@+id/em_day_dhuhr_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="Dhuhr"
+            android:textColor="#93AAA6"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_dhuhr_apt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="12:30"
+            android:textColor="#EAF4F1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_dhuhr_mit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="13:15"
+            android:textColor="#93AAA6"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/em_day_asr"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_emerald_cell"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <TextView
+            android:id="@+id/em_day_asr_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="Asr"
+            android:textColor="#93AAA6"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_asr_apt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="14:18"
+            android:textColor="#EAF4F1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_asr_mit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="14:30"
+            android:textColor="#93AAA6"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/em_day_maghrib"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_emerald_cell"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <TextView
+            android:id="@+id/em_day_maghrib_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="Maghrib"
+            android:textColor="#93AAA6"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_maghrib_apt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="16:43"
+            android:textColor="#EAF4F1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_maghrib_mit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="16:48"
+            android:textColor="#93AAA6"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/em_day_isha"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_emerald_cell"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="2dp">
+
+        <TextView
+            android:id="@+id/em_day_isha_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="Isha"
+            android:textColor="#93AAA6"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_isha_apt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="18:13"
+            android:textColor="#EAF4F1"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/em_day_isha_mit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="19:30"
+            android:textColor="#93AAA6"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+</LinearLayout>

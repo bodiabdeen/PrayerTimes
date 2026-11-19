@@ -52,6 +52,31 @@
             android:resource="@xml/prayer_times_widget_horizontal_info" />
       </receiver>
       
+      <!-- v2.0 Emerald widgets (the Classic ones above stay, so placed widgets keep their look) -->
+      <receiver
+        android:name=".widget.EmeraldNextWidget"
+        android:label="@string/emerald_next_widget_label"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+            android:name="android.appwidget.provider"
+            android:resource="@xml/emerald_next_widget_info" />
+      </receiver>
+
+      <receiver
+        android:name=".widget.EmeraldDayWidget"
+        android:label="@string/emerald_day_widget_label"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+            android:name="android.appwidget.provider"
+            android:resource="@xml/emerald_day_widget_info" />
+      </receiver>
+
       <!-- REMOVED: HeadlessTask service line -->
       <!-- react-native-background-fetch registers its services automatically via autolinking -->
       

@@ -18,27 +18,47 @@ interface WhatsNewModalProps {
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
+/**
+ * The pop-up shows once after each new version. For every release, change WHATS_NEW_VERSION
+ * and rewrite FEATURES below (CLAUDE.md, "Each new version").
+ */
+export const WHATS_NEW_VERSION = '2.0';
+
 const FEATURES = [
   {
-    icon: '🤖',
-    title: 'Android Home Screen Widget',
+    icon: '🎨',
+    title: 'A fresh new look',
     description:
-      'Add the Prayer Times widget to your Android home screen to see the next prayer at a glance — no need to open the app.',
+      'The app now uses the new Emerald look, with a ring that counts down to the next prayer. Prefer the old style? Open the menu (☰) and tap "Look" to switch back to Classic at any time.',
+    platform: 'all',
+  },
+  {
+    icon: '📅',
+    title: "Tomorrow's prayer times",
+    description:
+      'Tap "Tomorrow / غدًا" above the prayer list to see the times for tomorrow.',
+    platform: 'all',
+  },
+  {
+    icon: '🌙',
+    title: 'Special prayers',
+    description:
+      'Special prayers and events arranged by the masjid now appear in the list, with their date and time.',
+    platform: 'all',
+  },
+  {
+    icon: '📱',
+    title: 'New home screen widgets',
+    description:
+      'Two new Emerald widgets: "Next prayer" and "Prayer day". Touch and hold your home screen, tap Widgets, then find IOMPrayerTimes.',
     platform: 'android',
   },
   {
-    icon: '🍎',
-    title: 'iOS Home Screen Widget',
+    icon: '📱',
+    title: 'New home screen widget',
     description:
-      'Add the Prayer Times widget to your iPhone home screen or Lock Screen for instant access to upcoming prayer times.',
+      'A new "Prayer Times (Emerald)" widget in small and medium sizes, and for the Lock Screen. Touch and hold your home screen, tap Edit, then Add Widget.',
     platform: 'ios',
-  },
-  {
-    icon: '☰',
-    title: 'Athan Settings',
-    description:
-      'Customise your Athan experience — choose which prayers play the Athan, toggle notification sounds, and more from the menu.',
-    platform: 'all',
   },
 ];
 
@@ -71,7 +91,7 @@ export const WhatsNewModal: React.FC<WhatsNewModalProps> = ({
               What's New
             </Text>
             <Text style={[styles.subtitle, {color: theme.textSecondary}]}>
-              Here's what's new in this update
+              Here's what's new in version {WHATS_NEW_VERSION}
             </Text>
           </View>
 

@@ -23,8 +23,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const TIME_FORMAT_KEY = '@time_format_preference';
 const LOOK_KEY = '@look_preference';
-// Classic until the person picks Emerald in the menu, so an update changes nothing by surprise
-const DEFAULT_LOOK: Look = 'classic';
+// 2.0: Emerald is the default (owner decision, 19 November 2026). Anyone who picked a look in the
+// menu keeps it; Classic stays one tap away under Menu, "Look".
+const DEFAULT_LOOK: Look = 'emerald';
 
 export const ThemeProvider: React.FC<{children: ReactNode}> = ({children}) => {
   const systemColorScheme = useColorScheme();

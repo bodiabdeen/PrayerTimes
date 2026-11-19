@@ -7,6 +7,7 @@ React Native 0.83 app (Android and iOS) with home screen widgets. Community proj
 * Older app versions stay installed on people's phones and read the same Firestore `prayerTimes/*` documents. Only add fields or new documents; never rename, remove or change the type of an existing field.
 * The Jersey variant lives on `jersey/*` branches and is intentionally different. Never merge between the two without the owner deciding what should differ.
 * Never commit signing keys, `keystore.properties`, `.p8` APNs keys or service account files. `*.jks` and `keystore.properties` are ignored.
+* Each new version: set `WHATS_NEW_VERSION` and rewrite `FEATURES` in `src/components/WhatsNewModal.tsx`. The pop-up shows once per version on Android and iOS, so it must describe the release being shipped.
 * iOS builds need a Mac with Xcode 26 or later. On Windows, test on the Android emulator.
 * Before handing over, check that nothing got worse:
   * `npx tsc --noEmit` (5 known errors at the v1.5 baseline; do not add more)

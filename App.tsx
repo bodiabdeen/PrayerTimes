@@ -20,7 +20,7 @@ import {PrayerTimesTable} from './src/components/PrayerTimesTable';
 import {AnnouncementsModal} from './src/components/AnnouncementsModal';
 import {MenuModal} from './src/components/MenuModal';
 import {AthanSettingsModal} from './src/components/AthanSettingsModal';
-import {WhatsNewModal} from './src/components/WhatsNewModal';
+import {WhatsNewModal, WHATS_NEW_VERSION} from './src/components/WhatsNewModal';
 import {LoadingSpinner} from './src/components/LoadingSpinner';
 import {ConfigInfo} from './src/components/ConfigInfo';
 import {DayChoice, DayToggle} from './src/components/DayToggle';
@@ -41,7 +41,7 @@ import {configureBackgroundRefresh} from './src/services/backgroundRefreshServic
 const AUTO_REFRESH_INTERVAL = 1 * 60 * 60 * 1000;
 
 // Bump this version string with each release that has new features to announce.
-const WHATS_NEW_VERSION = '1.3.0';
+// The "What's New" pop-up shows once per version; WHATS_NEW_VERSION lives in WhatsNewModal.tsx
 const WHATS_NEW_KEY = `@whats_new_shown_${WHATS_NEW_VERSION}`;
 
 function AppContent(): React.JSX.Element {
@@ -136,8 +136,8 @@ function AppContent(): React.JSX.Element {
     } catch (error) {
       console.error('⚠️ Background refresh setup failed:', error);
     }
-// uncomment below to enable whatsNew
-//    await checkWhatsNew();
+    // Shows the "What's New" pop-up once after each new version (WHATS_NEW_VERSION).
+    await checkWhatsNew();
     loadInitialData();
   };
 
@@ -361,6 +361,8 @@ function AppContent(): React.JSX.Element {
         visible={showAthanSettings}
         onClose={() => setShowAthanSettings(false)}
       />
+
+      <WhatsNewModal visible={showWhatsNew} onClose={dismissWhatsNew} />
 
       <AnnouncementsModal
         visible={showAnnouncements}

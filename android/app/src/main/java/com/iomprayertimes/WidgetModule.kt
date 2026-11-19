@@ -114,6 +114,21 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
             context.sendBroadcast(intentHorizontal)
             
             Log.d("WidgetModule", "Horizontal widget update broadcast sent")
+
+            // v2.0: Emerald widgets
+            for (provider in listOf(
+                com.iomprayertimes.widget.EmeraldNextWidget::class.java,
+                com.iomprayertimes.widget.EmeraldDayWidget::class.java
+            )) {
+                val emeraldIds = AppWidgetManager.getInstance(context)
+                    .getAppWidgetIds(ComponentName(context, provider))
+                if (emeraldIds.isEmpty()) continue
+                val emeraldIntent = Intent(context, provider)
+                emeraldIntent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                emeraldIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, emeraldIds)
+                context.sendBroadcast(emeraldIntent)
+            }
+            Log.d("WidgetModule", "Emerald widget update broadcasts sent")
             
         } catch (e: Exception) {
             Log.e("WidgetModule", "Error updating widget", e)
