@@ -52,3 +52,10 @@ Branch `iom/release/v2.0`, created on 18 November 2026 from `iom/release/v1.5`, 
 * Reset the Play upload key in Play Console (App integrity, App signing, "Request upload key reset"). The old key and its passwords are public in the repository history. The publisher has the store access.
 * `@notifee/react-native` (all athan and iqama alerts) was archived in April 2026.
 * Related branches: backend `iombe/v2.0`, TV and website `pttv/v2.0`, Wear OS watch `v2.0`.
+
+## Branch `iom/v2.0-ring-colours` (19 November 2026, from `iom/v2.0-emerald-default`)
+
+* The Emerald ring on the main screen turns amber (`theme.warning`) under 3 minutes before the next prayer and red (`theme.error`) under 1 minute, the same rule as the TV, the website widget and the Wear OS watch (`src/components/CountdownTimer.tsx`). The countdown text keeps its warm tint from 5 minutes. Classic is unchanged.
+* `docs/MAC_PROMPT.md` asks for the same colours on the Apple Watch.
+* Checked: `tsc` 5 errors (baseline), 17 of 17 tests, ESLint on the file unchanged (1 error before and after). Not yet run on a device.
+

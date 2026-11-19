@@ -56,6 +56,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   const [progress, setProgress] = useState(0);
   const [currentNextPrayer, setCurrentNextPrayer] = useState<Prayer | null>(initialNextPrayer);
   const [isSoon, setIsSoon] = useState(false);
+  // v2.0 Emerald ring: amber under 3 minutes, red under 1 minute (as on the TV and the watch)
+  const [ringStage, setRingStage] = useState<'normal' | 'warn' | 'urgent'>('normal');
 
   // v1.6: gentle animations (skipped when the phone's "Reduce motion" setting is on)
   const reduceMotion = useReduceMotion();
@@ -165,6 +167,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
         }
 
         setIsSoon(diff <= SOON_MS);
+        setRingStage(diff <= 60 * 1000 ? 'urgent' : diff <= 3 * 60 * 1000 ? 'warn' : 'normal');
 
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
@@ -254,7 +257,12 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
           {hijriDate ? <Text style={[emerald.hijri, {color: extras.mint}]}>{hijriDate}</Text> : null}
         </View>
         <View style={emerald.row}>
-          <ProgressRing size={124} stroke={9} progress={progress} color={theme.accent} trackColor={extras.ringTrack}>
+          <ProgressRing
+            size={124}
+            stroke={9}
+            progress={progress}
+            color={ringStage === 'urgent' ? theme.error : ringStage === 'warn' ? theme.warning : theme.accent}
+            trackColor={extras.ringTrack}>
             <Animated.Text
               style={[emerald.ringTime, isSoon ? emerald.ringSoon : null, {opacity: countdownOpacity}]}>
               {ringText}
