@@ -76,3 +76,13 @@ Add a watchOS app to this iOS project (watchOS 11 or later), inside the same Xco
 5. Give me a short summary: what works, the screenshots, and anything I must check on my own iPhone and Apple Watch.
 
 ---
+
+## Step 3: Emerald default, Emerald widget and Firebase test build (branch `iom/v2.0-emerald-default`)
+
+This step uses a different branch from steps 1 and 2. Do it only after the owner says that branch is pushed.
+
+1. `git fetch origin` then `git checkout iom/v2.0-emerald-default` and `git pull`. Run `cd ios && pod install`.
+2. Run the app on an iPhone simulator. Check that: the "What's New" pop-up appears once on first open and not again after "Got it"; the Emerald look is the default; Menu, "Look" switches to Classic and back.
+3. Check the new widget: `ios/widget/EmeraldPrayerWidget.swift` is in the `widgetExtension` target (the `widget` folder is synchronised, so it should join automatically). Build, then add "Prayer Times (Emerald)" in small and medium sizes to the home screen, and the rectangular one to the Lock Screen. The Classic "Prayer Times" widget must still work and look as before.
+4. Firebase App Distribution (only if the owner asks): it needs an Ad Hoc (or Development) signed IPA, and the tester's iPhone UDID must be registered in the Apple Developer account. The owner has no App Store Connect access, so this may need the publisher. If it is possible: Product, Archive; Distribute App, Ad Hoc; export the IPA; then `firebase appdistribution:distribute <ipa> --project iompt-f5b68 --app <iOS app ID from GoogleService-Info.plist> --testers "<tester email>"`.
+5. If any Swift fix is needed, commit it on `iom/v2.0-emerald-default` only, push, and report what changed.
